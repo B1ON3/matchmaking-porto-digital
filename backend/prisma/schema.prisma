@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STARTUP
+  INVESTOR
+  MENTOR
+  ADMIN
+}
+
+enum MatchStatus {
+  PENDENTE
+  ACEITO
+  RECUSADO
+}
+
+enum AppointmentStatus {
+  AGENDADO
+  CONCLUIDO
+  CANCELADO
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(STARTUP)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  startupProfile   StartupProfile?
+  investorProfile  InvestorProfile?
+  sentMessages     Message[]         @relation("MessageSender")
+  appointmentsMade Appointment[]     @relation("AppointmentCreator")
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model StartupProfile {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  companyName String
+  sector      String
+  description String
+  stage       String
+  city        String
+  state       String  @default("PE")
+  website     String?
+  foundedAt   DateTime?
+  needs       String?
+  pitchUrl    String?
+  logoUrl     String?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchesAsStartup StartupMatch[]
+
+  @@map("startups")
+}
+
+model InvestorProfile {
+  id            String @id @default(uuid())
+  userId        String @unique
+  companyName   String?
+  sectorInterest String
+  stageInterest String
+  ticketMin     Int    @default(0)
+  ticketMax     Int    @default(0)
+  city          String?
+  state         String @default("PE")
+  bio           String?
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchesAsInvestor InvestorMatch[]
+
+  @@map("investors")
+}
+
+model Match {
+  id          String      @id @default(uuid())
+  score       Float
+  status      MatchStatus @default(PENDENTE)
+  reason      String?
+  startupId   String
+  investorId  String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  startup       StartupProfile  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  investor      InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  StartupMatch  StartupMatch[]
+  InvestorMatch InvestorMatch[]
+
+  @@unique([startupId, investorId])
+  @@index([score])
+  @@map("matches")
+}
+
+// ligacoes auxiliares pra facilitar a consulta por perfil
+model StartupMatch {
+  id        String @id @default(uuid())
+  matchId   String
+  startupId String
+  match     Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  startup   StartupProfile @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, startupId])
+  @@map("startup_matches")
+}
+
+model InvestorMatch {
+  id        String @id @default(uuid())
+  matchId   String
+  investorId String
+  match     Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  investor  InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, investorId])
+  @@map("investor_matches")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  recipientId String
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId])
+  @@map("messages")
+}
+
+model Appointment {
+  id          String            @id @default(uuid())
+  title       String
+  description String?
+  scheduledAt DateTime
+  status      AppointmentStatus @default(AGENDADO)
+  createdById String
+  createdAt   DateTime          @default(now())
+
+  createdBy User @relation("AppointmentCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([scheduledAt])
+  @@map("appointments")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  entity     String
+  entityId   String?
+  details    String?
+  ip         String?
+  userAgent  String?
+  userId     String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
