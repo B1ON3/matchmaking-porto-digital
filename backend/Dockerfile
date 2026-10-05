@@ -21,9 +21,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # aqui ficam as devDependencies de proposito, porque o guia de execucao usa
-# "docker-compose exec backend npx prisma migrate dev" e "npm run prisma:seed"
+# "docker compose exec backend npx prisma migrate dev" e "npm run prisma:seed",
+# que dependem do cli do prisma e do tsx. o --include=dev e necessario porque
+# o NODE_ENV=production abaixo faz o npm pular as devDependencies sozinho.
 COPY package*.json ./
-RUN npm install
+RUN npm install --include=dev
 
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
