@@ -1,0 +1,7 @@
+# normaliza as quebras de linha pra nao sujar o diff entrewindows e linux
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
