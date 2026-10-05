@@ -1,3 +1,7 @@
+// precisa vir antes de qualquer rota: no express 4 um handler async que
+// rejeita nao vai sozinho pro error middleware, ele derruba o processo inteiro
+import 'express-async-errors';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
