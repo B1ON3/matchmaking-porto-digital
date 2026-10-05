@@ -11,6 +11,7 @@ const investorSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
   email: emailSchema,
   password: z.string().min(6, 'a senha precisa de pelo menos 6 caracteres'),
+  role: z.enum([UserRole.INVESTOR, UserRole.MENTOR]).default(UserRole.INVESTOR),
   companyName: z.string().optional(),
   sectorInterest: z.string().min(2, 'informe os setores de interesse'),
   stageInterest: z.string().min(2, 'informe os estagios de interesse'),
@@ -21,7 +22,7 @@ const investorSchema = z.object({
   bio: z.string().optional(),
 });
 
-const updateSchema = investorSchema.partial().omit({ email: true, password: true });
+const updateSchema = investorSchema.partial().omit({ email: true, password: true, role: true });
 
 // POST /api/investors  (RF01 / RF02)
 export async function create(req: Request, res: Response) {
@@ -37,14 +38,14 @@ export async function create(req: Request, res: Response) {
     throw HttpError.conflict('ja existe um cadastro com esse email');
   }
 
-  const { name, email, password, ...perfil } = dados;
+  const { name, email, password, role, ...perfil } = dados;
 
   const user = await prisma.user.create({
     data: {
       name,
       email,
       passwordHash: await hashPassword(password),
-      role: UserRole.INVESTOR,
+      role,
       investorProfile: { create: perfil },
     },
     select: {
@@ -74,13 +75,15 @@ export async function list(req: Request, res: Response) {
 
   const { setor, estado, pagina, porPagina } = filtros;
 
+  const where = {
+    ...(setor
+      ? { sectorInterest: { contains: setor, mode: 'insensitive' as const } }
+      : {}),
+    ...(estado ? { state: estado } : {}),
+  };
+
   const investors = await prisma.investorProfile.findMany({
-    where: {
-      ...(setor
-        ? { sectorInterest: { contains: setor, mode: 'insensitive' as const } }
-        : {}),
-      ...(estado ? { state: estado } : {}),
-    },
+    where,
     include: {
       user: { select: { id: true, name: true, email: true } },
       _count: { select: { matches: true } },
@@ -90,7 +93,7 @@ export async function list(req: Request, res: Response) {
     take: porPagina,
   });
 
-  const total = await prisma.investorProfile.count();
+  const total = await prisma.investorProfile.count({ where });
 
   res.json({ total, pagina, porPagina, investors });
 }
@@ -130,6 +133,14 @@ export async function update(req: Request, res: Response) {
   }
 
   const { name, ...perfil } = dados as { name?: string } & Record<string, unknown>;
+
+  const atual = await prisma.investorProfile.findUnique({ where: { id } });
+  const novoMin = (perfil.ticketMin as number | undefined) ?? atual!.ticketMin;
+  const novoMax = (perfil.ticketMax as number | undefined) ?? atual!.ticketMax;
+
+  if (novoMax < novoMin) {
+    throw HttpError.badRequest('ticketMax nao pode ser menor que ticketMin');
+  }
 
   const atualizado = await prisma.investorProfile.update({
     where: { id },

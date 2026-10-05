@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Alert } from '../components/Alert';
 import { extractErrorMessage } from '../services/api';
 
-type Tipo = 'STARTUP' | 'INVESTOR';
+type Tipo = 'STARTUP' | 'INVESTOR' | 'MENTOR';
 
 export function Register() {
   const { register, user } = useAuth();
@@ -30,6 +30,7 @@ export function Register() {
   });
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [aceitoTermos, setAceitoTermos] = useState(false);
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -42,6 +43,12 @@ export function Register() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setErro('');
+
+    if (!aceitoTermos) {
+      setErro('Você precisa aceitar a política de uso e o tratamento de dados (LGPD) para continuar.');
+      return;
+    }
+
     setEnviando(true);
 
     try {
@@ -65,7 +72,7 @@ export function Register() {
           name: form.name,
           email: form.email,
           password: form.password,
-          role: 'INVESTOR',
+          role: tipo === 'MENTOR' ? 'MENTOR' : 'INVESTOR',
           investor: {
             companyName: form.companyName || undefined,
             sectorInterest: form.sectorInterest,
@@ -98,14 +105,14 @@ export function Register() {
         </div>
 
         <div className="mb-5 flex gap-2">
-          {(['STARTUP', 'INVESTOR'] as Tipo[]).map((opcao) => (
+          {(['STARTUP', 'INVESTOR', 'MENTOR'] as Tipo[]).map((opcao) => (
             <button
               key={opcao}
               type="button"
               onClick={() => setTipo(opcao)}
               className={tipo === opcao ? 'btn-primary flex-1' : 'btn-secondary flex-1'}
             >
-              {opcao === 'STARTUP' ? 'Sou startup' : 'Sou investidor anjo'}
+              {opcao === 'STARTUP' ? 'Sou startup' : opcao === 'INVESTOR' ? 'Sou investidor anjo' : 'Sou mentor'}
             </button>
           ))}
         </div>
@@ -325,6 +332,16 @@ export function Register() {
               </div>
             </>
           )}
+
+          <label className="flex items-start gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={aceitoTermos}
+              onChange={(e) => setAceitoTermos(e.target.checked)}
+            />
+            Li e aceito a política de uso e o tratamento dos meus dados conforme a LGPD (consentimento, finalidade e direito de exclusão).
+          </label>
 
           <button type="submit" className="btn-primary w-full" disabled={enviando}>
             {enviando ? 'Criando conta...' : 'Criar conta'}

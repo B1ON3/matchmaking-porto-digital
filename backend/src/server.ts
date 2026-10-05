@@ -24,8 +24,11 @@ app.use('/api', routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(env.port, () => {
-  console.log(`API rodando em http://localhost:${env.port}/api`);
-});
+// na Vercel o app roda como serverless function, entao nao abre porta
+if (!process.env.VERCEL) {
+  app.listen(env.port, () => {
+    console.log(`API rodando em http://localhost:${env.port}/api`);
+  });
+}
 
 export default app;

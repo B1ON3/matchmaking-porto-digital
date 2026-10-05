@@ -73,12 +73,14 @@ export async function list(req: Request, res: Response) {
 
   const { setor, estagio, cidade, pagina, porPagina } = filtros;
 
+  const where = {
+    ...(setor ? { sector: { contains: setor, mode: 'insensitive' as const } } : {}),
+    ...(estagio ? { stage: { contains: estagio, mode: 'insensitive' as const } } : {}),
+    ...(cidade ? { city: { contains: cidade, mode: 'insensitive' as const } } : {}),
+  };
+
   const startups = await prisma.startupProfile.findMany({
-    where: {
-      ...(setor ? { sector: { contains: setor, mode: 'insensitive' } } : {}),
-      ...(estagio ? { stage: { contains: estagio, mode: 'insensitive' } } : {}),
-      ...(cidade ? { city: { contains: cidade, mode: 'insensitive' } } : {}),
-    },
+    where,
     include: {
       user: { select: { id: true, name: true, email: true } },
       _count: { select: { matches: true } },
@@ -88,7 +90,7 @@ export async function list(req: Request, res: Response) {
     take: porPagina,
   });
 
-  const total = await prisma.startupProfile.count();
+  const total = await prisma.startupProfile.count({ where });
 
   res.json({ total, pagina, porPagina, startups });
 }

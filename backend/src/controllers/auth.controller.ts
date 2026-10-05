@@ -11,7 +11,7 @@ const cadastroSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
   email: emailSchema,
   password: z.string().min(6, 'a senha precisa de pelo menos 6 caracteres'),
-  role: z.nativeEnum(UserRole).default(UserRole.STARTUP),
+  role: z.enum([UserRole.STARTUP, UserRole.INVESTOR, UserRole.MENTOR]).default(UserRole.STARTUP),
   startup: z
     .object({
       companyName: z.string().min(2),
@@ -50,6 +50,14 @@ export async function register(req: Request, res: Response) {
 
   if (dados.role === UserRole.INVESTOR && !dados.investor) {
     throw HttpError.badRequest('investor e obrigatorio quando role = INVESTOR');
+  }
+
+  if (dados.role === UserRole.MENTOR && !dados.investor) {
+    throw HttpError.badRequest('investor (perfil de mentoria) e obrigatorio quando role = MENTOR');
+  }
+
+  if (dados.investor && dados.investor.ticketMax < dados.investor.ticketMin) {
+    throw HttpError.badRequest('ticketMax nao pode ser menor que ticketMin');
   }
 
   const emailExistente = await prisma.user.findUnique({ where: { email: dados.email } });
