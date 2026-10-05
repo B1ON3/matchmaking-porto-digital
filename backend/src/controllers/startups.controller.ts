@@ -5,10 +5,11 @@ import { prisma } from '../config/prisma';
 import { generateToken } from '../services/token.service';
 import { hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
+import { emailSchema } from '../utils/email';
 
 const startupSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
-  email: z.string().email('email invalido'),
+  email: emailSchema,
   password: z.string().min(6, 'a senha precisa de pelo menos 6 caracteres'),
   companyName: z.string().min(2, 'informe o nome da startup'),
   sector: z.string().min(2, 'informe o setor'),

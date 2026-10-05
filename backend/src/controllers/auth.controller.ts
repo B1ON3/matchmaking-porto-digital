@@ -5,10 +5,11 @@ import { prisma } from '../config/prisma';
 import { generateToken } from '../services/token.service';
 import { comparePassword, hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
+import { emailSchema } from '../utils/email';
 
 const cadastroSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
-  email: z.string().email('email invalido'),
+  email: emailSchema,
   password: z.string().min(6, 'a senha precisa de pelo menos 6 caracteres'),
   role: z.nativeEnum(UserRole).default(UserRole.STARTUP),
   startup: z
@@ -35,7 +36,7 @@ const cadastroSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email('email invalido'),
+  email: emailSchema,
   password: z.string().min(1, 'informe a senha'),
 });
 
