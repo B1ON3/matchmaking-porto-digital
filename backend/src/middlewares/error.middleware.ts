@@ -38,6 +38,18 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     }
   }
 
+  // erros do body-parser (json malformado, payload grande) chegam aqui com
+  // statusCode pronto. sem isso um corpo invalido viraria 500 em vez de 400
+  if (typeof err === 'object' && err !== null && 'statusCode' in err) {
+    const comStatus = err as { statusCode?: number; type?: string; message?: string };
+
+    if (comStatus.statusCode === 400 || comStatus.statusCode === 413) {
+      return res.status(comStatus.statusCode).json({
+        error: comStatus.type === 'entity.parse.failed' ? 'Json invalido' : 'Requisicao invalida',
+      });
+    }
+  }
+
   console.error('[erro nao tratado]', err);
 
   return res.status(500).json({ error: 'Erro interno do servidor' });
