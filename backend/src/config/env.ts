@@ -17,5 +17,5 @@ export const env = {
   databaseUrl: required('DATABASE_URL', 'postgresql://postgres:postgres@db:5432/matchmaking?schema=public'),
   jwtSecret: required('JWT_SECRET', 'dev-secret-nao-usar-em-producao'),
   jwtExpiresIn: required('JWT_EXPIRES_IN', '1d'),
-  corsOrigin: required('CORS_ORIGIN', 'http://localhost:3000'),
+  corsOrigin: required('CORS_ORIGIN', 'http://localhost:3000,https://matchmaking-frontend-ochre.vercel.app'),
 };
