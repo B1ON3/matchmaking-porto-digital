@@ -10,6 +10,28 @@ import { auditRoutes } from './audit.routes';
 
 export const routes = Router();
 
+// sem essa rota, abrir a url base da api no navegador devolvia 404 e nao
+// dizia nada do que existia ali
+routes.get('/', (_req: Request, res: Response) => {
+  res.json({
+    servico: 'matchmaking-porto-digital-api',
+    version: '0.1.0',
+    descricao: 'API REST de matchmaking entre startups e investidores anjo do Porto Digital',
+    status: 'ok',
+    health: '/api/health',
+    grupos: {
+      auth: '/api/v1/auth',
+      startups: '/api/v1/startups',
+      investors: '/api/v1/investors',
+      matches: '/api/v1/matches',
+      mensagens: '/api/v1/messages',
+      agendamentos: '/api/v1/appointments',
+      auditoria: '/api/v1/audit',
+    },
+    autenticacao: 'Bearer token em /api/v1/auth/login. As rotas marcadas como privadas exigem o header Authorization.',
+  });
+});
+
 routes.get('/health', async (_req: Request, res: Response) => {
   let database = 'offline';
 
