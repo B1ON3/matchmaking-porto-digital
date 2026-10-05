@@ -38,6 +38,8 @@ CREATE TABLE "startups" (
     "needs" TEXT,
     "pitchUrl" TEXT,
     "logoUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "startups_pkey" PRIMARY KEY ("id")
 );
@@ -54,6 +56,8 @@ CREATE TABLE "investors" (
     "city" TEXT,
     "state" TEXT NOT NULL DEFAULT 'PE',
     "bio" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "investors_pkey" PRIMARY KEY ("id")
 );
