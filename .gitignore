@@ -1,0 +1,48 @@
+# Dependências
+node_modules/
+.pnp/
+.pnp.js
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Variáveis de ambiente (nunca commitar segredos)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Banco de dados local / volumes do Docker
+*.db
+*.sqlite
+postgres-data/
+
+# Testes
+coverage/
+.nyc_output/
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# SO
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs do sistema
+npm-debug.log
+yarn-error.log
