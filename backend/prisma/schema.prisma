@@ -38,6 +38,7 @@ model User {
   startupProfile   StartupProfile?
   investorProfile  InvestorProfile?
   sentMessages     Message[]         @relation("MessageSender")
+  receivedMessages Message[]         @relation("MessageRecipient")
   appointmentsMade Appointment[]     @relation("AppointmentCreator")
   auditLogs        AuditLog[]
 
@@ -45,98 +46,77 @@ model User {
 }
 
 model StartupProfile {
-  id          String  @id @default(uuid())
-  userId      String  @unique
+  id          String    @id @default(uuid())
+  userId      String    @unique
   companyName String
   sector      String
   description String
   stage       String
   city        String
-  state       String  @default("PE")
+  state       String    @default("PE")
   website     String?
   foundedAt   DateTime?
   needs       String?
   pitchUrl    String?
   logoUrl     String?
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  matchesAsStartup StartupMatch[]
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches Match[]
 
+  @@index([sector])
+  @@index([stage])
   @@map("startups")
 }
 
 model InvestorProfile {
-  id            String @id @default(uuid())
-  userId        String @unique
-  companyName   String?
+  id             String  @id @default(uuid())
+  userId         String  @unique
+  companyName    String?
   sectorInterest String
-  stageInterest String
-  ticketMin     Int    @default(0)
-  ticketMax     Int    @default(0)
-  city          String?
-  state         String @default("PE")
-  bio           String?
+  stageInterest  String
+  ticketMin      Int     @default(0)
+  ticketMax      Int     @default(0)
+  city           String?
+  state          String  @default("PE")
+  bio            String?
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  matchesAsInvestor InvestorMatch[]
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches Match[]
 
+  @@index([state])
   @@map("investors")
 }
 
 model Match {
-  id          String      @id @default(uuid())
-  score       Float
-  status      MatchStatus @default(PENDENTE)
-  reason      String?
-  startupId   String
-  investorId  String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String      @id @default(uuid())
+  score      Float
+  status     MatchStatus @default(PENDENTE)
+  reason     String?
+  startupId  String
+  investorId String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
-  startup       StartupProfile  @relation(fields: [startupId], references: [id], onDelete: Cascade)
-  investor      InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Cascade)
-  StartupMatch  StartupMatch[]
-  InvestorMatch InvestorMatch[]
+  startup  StartupProfile  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  investor InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Cascade)
 
   @@unique([startupId, investorId])
   @@index([score])
   @@map("matches")
 }
 
-// ligacoes auxiliares pra facilitar a consulta por perfil
-model StartupMatch {
-  id        String @id @default(uuid())
-  matchId   String
-  startupId String
-  match     Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  startup   StartupProfile @relation(fields: [startupId], references: [id], onDelete: Cascade)
-
-  @@unique([matchId, startupId])
-  @@map("startup_matches")
-}
-
-model InvestorMatch {
-  id        String @id @default(uuid())
-  matchId   String
-  investorId String
-  match     Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  investor  InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Cascade)
-
-  @@unique([matchId, investorId])
-  @@map("investor_matches")
-}
-
 model Message {
-  id         String   @id @default(uuid())
-  content    String
-  senderId   String
+  id          String    @id @default(uuid())
+  content     String
+  senderId    String
   recipientId String
-  readAt     DateTime?
-  createdAt  DateTime @default(now())
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
 
-  sender   User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  sender    User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
-  @@index([recipientId])
+  @@index([recipientId, createdAt])
   @@map("messages")
 }
 
@@ -156,18 +136,19 @@ model Appointment {
 }
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  action     String
-  entity     String
-  entityId   String?
-  details    String?
-  ip         String?
-  userAgent  String?
-  userId     String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ip        String?
+  userAgent String?
+  userId    String?
+  createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
+  @@index([entity])
   @@map("audit_logs")
 }
