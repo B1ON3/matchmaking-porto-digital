@@ -40,6 +40,11 @@ const loginSchema = z.object({
   password: z.string().min(1, 'informe a senha'),
 });
 
+const redefinirSenhaSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(6, 'a senha precisa de pelo menos 6 caracteres'),
+});
+
 // POST /api/auth/register
 export async function register(req: Request, res: Response) {
   const dados = cadastroSchema.parse(req.body);
@@ -107,6 +112,24 @@ export async function login(req: Request, res: Response) {
   const { passwordHash, ...userSemSenha } = user;
 
   res.json({ token, user: userSemSenha });
+}
+
+// POST /api/auth/reset-password
+export async function resetPassword(req: Request, res: Response) {
+  const { email, password } = redefinirSenhaSchema.parse(req.body);
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (!user) {
+    throw HttpError.notFound('nao encontrei uma conta com esse email');
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: await hashPassword(password) },
+  });
+
+  res.json({ mensagem: 'senha atualizada, ja pode entrar com a nova senha' });
 }
 
 // GET /api/auth/me

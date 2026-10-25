@@ -14,7 +14,7 @@ export const routes = Router();
 // dizia nada do que existia ali
 routes.get('/', (_req: Request, res: Response) => {
   res.json({
-    servico: 'matchmaking-porto-digital-api',
+    servico: 'laco-api',
     version: '0.1.0',
     descricao: 'API REST de matchmaking entre startups e investidores anjo do Porto Digital',
     status: 'ok',
@@ -44,7 +44,7 @@ routes.get('/health', async (_req: Request, res: Response) => {
 
   res.json({
     status: 'ok',
-    servico: 'matchmaking-porto-digital-api',
+    servico: 'laco-api',
     version: '0.1.0',
     banco: database,
     timestamp: new Date().toISOString(),
