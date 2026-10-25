@@ -7,22 +7,40 @@
     scroll-behavior: smooth;
   }
 
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-800 antialiased;
+    @apply bg-areia-50 font-sans text-slate-800 antialiased;
+  }
+
+  .dark body {
+    @apply bg-noite-900 text-slate-100;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    @apply bg-laco-200 text-laco-950;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-porto-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-laco-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-offset-noite-900;
   }
 
   .btn-primary {
-    @apply btn bg-porto-600 text-white hover:bg-porto-700;
+    @apply btn bg-laco-800 text-areia-50 shadow-sm hover:bg-laco-900 dark:bg-areia-200 dark:text-noite-900 dark:hover:bg-areia-100;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50;
+    @apply btn bg-white text-laco-900 ring-1 ring-slate-300 hover:bg-areia-100 dark:bg-noite-800 dark:text-areia-100 dark:ring-noite-600 dark:hover:bg-noite-700;
   }
 
   .btn-danger {
@@ -30,18 +48,161 @@
   }
 
   .input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-porto-500 focus:ring-2 focus:ring-porto-100;
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-laco-500 focus:ring-4 focus:ring-laco-100 dark:border-noite-600 dark:bg-noite-850 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-laco-400 dark:focus:ring-laco-900;
   }
 
   .label {
-    @apply mb-1 block text-sm font-medium text-slate-700;
+    @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-areia-200;
   }
 
   .card {
-    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm;
+    @apply rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-noite-700 dark:bg-noite-800 dark:shadow-none;
   }
 
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-laco-700 dark:text-laco-300;
+  }
+
+  .link {
+    @apply font-medium text-laco-700 underline-offset-4 hover:underline dark:text-laco-300;
+  }
+
+  .logo-mark {
+    --mark-a: #23473a;
+    --mark-b: #c4622d;
+  }
+
+  .dark .logo-mark {
+    --mark-a: #95c3ab;
+    --mark-b: #e78358;
+  }
+
+  .bg-renda {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1'%3E%3Ccircle cx='42' cy='42' r='23'/%3E%3Ccircle cx='0' cy='0' r='23'/%3E%3Ccircle cx='84' cy='0' r='23'/%3E%3Ccircle cx='0' cy='84' r='23'/%3E%3Ccircle cx='84' cy='84' r='23'/%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+
+/*
+ * Compatibilidade do tema escuro com os utilitários neutros usados nas telas.
+ * Fica fora das layers para vencer as utilities geradas pelo Tailwind.
+ */
+.dark .text-slate-900,
+.dark .text-slate-800 {
+  color: #f2f6f3;
+}
+
+.dark .text-slate-700 {
+  color: #dbe6df;
+}
+
+.dark .text-slate-600 {
+  color: #b8c9c0;
+}
+
+.dark .text-slate-500 {
+  color: #94a99f;
+}
+
+.dark .text-slate-400 {
+  color: #7e948a;
+}
+
+.dark .bg-white {
+  background-color: #12201b;
+}
+
+.dark .bg-slate-50 {
+  background-color: #0b1512;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1b2c25;
+}
+
+.dark .bg-slate-200 {
+  background-color: #23362e;
+}
+
+.dark .hover\:bg-slate-50:hover {
+  background-color: #182a23;
+}
+
+.dark .hover\:bg-slate-100:hover {
+  background-color: #1b2c25;
+}
+
+.dark .border-slate-100 {
+  border-color: #1b2c25;
+}
+
+.dark .border-slate-200 {
+  border-color: #23362e;
+}
+
+.dark .border-slate-300 {
+  border-color: #2c4439;
+}
+
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1b2c25;
+}
+
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #23362e;
+}
+
+.dark .ring-slate-300 {
+  --tw-ring-color: #2c4439;
+}
+
+.dark .bg-porto-50 {
+  background-color: rgba(70, 141, 112, 0.18);
+}
+
+.dark .bg-porto-100 {
+  background-color: rgba(70, 141, 112, 0.24);
+}
+
+.dark .text-porto-800 {
+  color: #b7dcc9;
+}
+
+.dark .text-porto-700 {
+  color: #a5d2bd;
+}
+
+.dark .text-porto-600 {
+  color: #8cc5aa;
+}
+
+.dark .text-porto-100 {
+  color: #dff0e7;
+}
+
+.dark .text-emerald-700 {
+  color: #6ee7b7;
+}
+
+.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
+.dark .text-rose-600 {
+  color: #fda4af;
+}
+
+.dark .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.12);
+}
+
+.dark .text-amber-700 {
+  color: #fcd34d;
+}
+
+.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.12);
 }

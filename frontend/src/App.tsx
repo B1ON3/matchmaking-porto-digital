@@ -1,25 +1,20 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import type { ReactElement } from "react";
-import { useAuth } from "./context/AuthContext";
-import { Navbar } from "./components/Navbar";
-import { Spinner } from "./components/Spinner";
-import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
-import { Dashboard } from "./pages/Dashboard";
-import { Profile } from "./pages/Profile";
-import { Matchmaking } from "./pages/Matchmaking";
-import { Messages } from "./pages/Messages";
-import { Appointments } from "./pages/Appointments";
-import { Moderation } from "./pages/Moderation";
-import type { UserRole } from "./types";
+import { Navigate, Route, Routes } from 'react-router-dom';
+import type { ReactElement } from 'react';
+import { useAuth } from './context/AuthContext';
+import { Navbar } from './components/Navbar';
+import { Spinner } from './components/Spinner';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { Dashboard } from './pages/Dashboard';
+import { Profile } from './pages/Profile';
+import { Matchmaking } from './pages/Matchmaking';
+import { Messages } from './pages/Messages';
+import { Appointments } from './pages/Appointments';
+import { Moderation } from './pages/Moderation';
+import type { UserRole } from './types';
 
-function Protegida({
-  children,
-  perfis,
-}: {
-  children: ReactElement;
-  perfis?: UserRole[];
-}) {
+function Protegida({ children, perfis }: { children: ReactElement; perfis?: UserRole[] }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -31,16 +26,11 @@ function Protegida({
   }
 
   if (perfis && !perfis.includes(user.role)) {
-    return (
-      <Navigate
-        to={user.role === "ADMIN" ? "/moderacao" : "/dashboard"}
-        replace
-      />
-    );
+    return <Navigate to={user.role === 'ADMIN' ? '/moderacao' : '/dashboard'} replace />;
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-areia-50 dark:bg-noite-900">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
     </div>
@@ -58,6 +48,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Register />} />
+      <Route path="/esqueci-senha" element={<ForgotPassword />} />
 
       <Route
         path="/dashboard"
@@ -70,7 +61,7 @@ export default function App() {
       <Route
         path="/perfil"
         element={
-          <Protegida perfis={["STARTUP", "INVESTOR", "MENTOR"]}>
+          <Protegida perfis={['STARTUP', 'INVESTOR', 'MENTOR']}>
             <Profile />
           </Protegida>
         }
@@ -102,16 +93,13 @@ export default function App() {
       <Route
         path="/moderacao"
         element={
-          <Protegida perfis={["ADMIN"]}>
+          <Protegida perfis={['ADMIN']}>
             <Moderation />
           </Protegida>
         }
       />
 
-      <Route
-        path="*"
-        element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
-      />
+      <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />
     </Routes>
   );
 }

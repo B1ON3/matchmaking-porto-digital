@@ -7,7 +7,7 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-const TOKEN_KEY = '@matchmaking:token';
+const TOKEN_KEY = '@laco:token';
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
