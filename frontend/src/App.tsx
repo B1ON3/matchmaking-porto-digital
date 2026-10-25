@@ -1,19 +1,26 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
-import type { ReactElement } from 'react';
-import { useAuth } from './context/AuthContext';
-import { Navbar } from './components/Navbar';
-import { Spinner } from './components/Spinner';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
-import { Profile } from './pages/Profile';
-import { Matchmaking } from './pages/Matchmaking';
-import { Messages } from './pages/Messages';
-import { Appointments } from './pages/Appointments';
-import { Moderation } from './pages/Moderation';
+import { Navigate, Route, Routes } from "react-router-dom";
+import type { ReactElement } from "react";
+import { useAuth } from "./context/AuthContext";
+import { Navbar } from "./components/Navbar";
+import { Spinner } from "./components/Spinner";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
+import { Dashboard } from "./pages/Dashboard";
+import { Profile } from "./pages/Profile";
+import { Matchmaking } from "./pages/Matchmaking";
+import { Messages } from "./pages/Messages";
+import { Appointments } from "./pages/Appointments";
+import { Moderation } from "./pages/Moderation";
+import type { UserRole } from "./types";
 
-function Protegida({ children, apenasAdmin = false }: { children: ReactElement; apenasAdmin?: boolean }) {
-  const { user, loading, isAdmin } = useAuth();
+function Protegida({
+  children,
+  perfis,
+}: {
+  children: ReactElement;
+  perfis?: UserRole[];
+}) {
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <Spinner texto="Verificando sua sessão..." />;
@@ -23,9 +30,13 @@ function Protegida({ children, apenasAdmin = false }: { children: ReactElement; 
     return <Navigate to="/login" replace />;
   }
 
-  // a tela de moderação só existe pra admin (RNF10)
-  if (apenasAdmin && !isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+  if (perfis && !perfis.includes(user.role)) {
+    return (
+      <Navigate
+        to={user.role === "ADMIN" ? "/moderacao" : "/dashboard"}
+        replace
+      />
+    );
   }
 
   return (
@@ -59,7 +70,7 @@ export default function App() {
       <Route
         path="/perfil"
         element={
-          <Protegida>
+          <Protegida perfis={["STARTUP", "INVESTOR", "MENTOR"]}>
             <Profile />
           </Protegida>
         }
@@ -91,13 +102,16 @@ export default function App() {
       <Route
         path="/moderacao"
         element={
-          <Protegida apenasAdmin>
+          <Protegida perfis={["ADMIN"]}>
             <Moderation />
           </Protegida>
         }
       />
 
-      <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />
+      <Route
+        path="*"
+        element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
+      />
     </Routes>
   );
 }

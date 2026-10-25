@@ -1,16 +1,27 @@
-import { Link, NavLink } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import type { UserRole } from "../types";
 
-const links = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/matchmaking', label: 'Matchmaking' },
-  { to: '/perfil', label: 'Meu perfil' },
-  { to: '/mensagens', label: 'Mensagens' },
-  { to: '/agendamentos', label: 'Agendamentos' },
-];
+const ROTULOS: Record<UserRole, string> = {
+  STARTUP: "Startup",
+  INVESTOR: "Investidor",
+  MENTOR: "Mentor",
+  ADMIN: "Administrador",
+};
 
 export function Navbar() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, hasRole } = useAuth();
+  const temPerfil = hasRole("STARTUP", "INVESTOR", "MENTOR");
+  const ehAdmin = hasRole("ADMIN");
+
+  const links = [
+    { to: "/dashboard", label: "Dashboard" },
+    { to: "/matchmaking", label: "Matchmaking" },
+    ...(temPerfil ? [{ to: "/perfil", label: "Meu perfil" }] : []),
+    { to: "/mensagens", label: "Mensagens" },
+    { to: "/agendamentos", label: "Agendamentos" },
+    ...(ehAdmin ? [{ to: "/moderacao", label: "Moderação" }] : []),
+  ];
 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -32,35 +43,22 @@ export function Navbar() {
               className={({ isActive }) =>
                 `rounded-lg px-3 py-2 text-sm transition ${
                   isActive
-                    ? 'bg-porto-50 font-medium text-porto-700'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? "bg-porto-50 font-medium text-porto-700"
+                    : "text-slate-600 hover:bg-slate-100"
                 }`
               }
             >
               {link.label}
             </NavLink>
           ))}
-
-          {isAdmin && (
-            <NavLink
-              to="/moderacao"
-              className={({ isActive }) =>
-                `rounded-lg px-3 py-2 text-sm transition ${
-                  isActive
-                    ? 'bg-porto-50 font-medium text-porto-700'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`
-              }
-            >
-              Moderação
-            </NavLink>
-          )}
         </nav>
 
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">
             <p className="text-sm font-medium text-slate-900">{user?.name}</p>
-            <p className="text-xs text-slate-500">{user?.role}</p>
+            <p className="text-xs text-slate-500">
+              {user?.role ? ROTULOS[user.role] : ""}
+            </p>
           </div>
           <button type="button" onClick={logout} className="btn-secondary">
             Sair
