@@ -3,14 +3,16 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
+# openssl/libc6-compat sao exigidos pelo engine do Prisma no alpine
+RUN apk add --no-cache openssl libc6-compat
+
+# o schema precisa existir antes do npm ci: o postinstall roda `prisma generate`
 COPY package*.json ./
-RUN npm install
+COPY prisma ./prisma
+RUN npm ci
 
 COPY tsconfig.json ./
-COPY prisma ./prisma
 COPY src ./src
-
-RUN npx prisma generate
 RUN npm run build
 
 # ---------- estagio de execucao ----------
@@ -18,17 +20,15 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache openssl libc6-compat
+
 ENV NODE_ENV=production
 
-# aqui ficam as devDependencies de proposito, porque o guia de execucao usa
-# "docker compose exec backend npx prisma migrate dev" e "npm run prisma:seed",
-# que dependem do cli do prisma e do tsx. o --include=dev e necessario porque
-# o NODE_ENV=production abaixo faz o npm pular as devDependencies sozinho.
-COPY package*.json ./
-RUN npm install --include=dev
-
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
+# node_modules vem do build de proposito: o guia usa `docker compose exec
+# backend npx prisma migrate dev` e `npm run prisma:seed`, que precisam do cli
+# do prisma e do tsx (devDependencies).
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 
