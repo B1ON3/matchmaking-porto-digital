@@ -13,6 +13,8 @@ import { investorService, startupService } from '../services';
 import { extractErrorMessage } from '../services/api';
 import type { InvestorInsights, MatchStatus, ProjectStatus, StartupInsights } from '../types';
 
+export type ProfileModalAba = 'briefing' | 'tese' | 'plataforma' | 'potencial';
+
 interface ProfileModalProps {
   open: boolean;
   onClose: () => void;
@@ -21,6 +23,8 @@ interface ProfileModalProps {
   matchId?: string;
   matchStatus?: MatchStatus;
   score?: number;
+  initialTab?: ProfileModalAba;
+  hideActions?: boolean;
   onStatusChange?: (status: 'ACEITO' | 'RECUSADO') => Promise<void>;
 }
 
@@ -133,6 +137,14 @@ function TextoVazio({ children }: { children: ReactNode }) {
   return <p className="text-sm text-slate-500 dark:text-slate-300">{children}</p>;
 }
 
+function abaInicial(kind: 'startup' | 'investor', initialTab?: ProfileModalAba): ProfileModalAba {
+  if (kind === 'startup') {
+    return initialTab === 'plataforma' || initialTab === 'potencial' ? initialTab : 'briefing';
+  }
+
+  return initialTab === 'plataforma' ? 'plataforma' : 'tese';
+}
+
 export function ProfileModal({
   open,
   onClose,
@@ -141,6 +153,8 @@ export function ProfileModal({
   matchId,
   matchStatus,
   score,
+  initialTab,
+  hideActions = false,
   onStatusChange,
 }: ProfileModalProps) {
   const navigate = useNavigate();
@@ -151,14 +165,14 @@ export function ProfileModal({
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
   const [tentativa, setTentativa] = useState(0);
-  const [aba, setAba] = useState(kind === 'startup' ? 'briefing' : 'tese');
+  const [aba, setAba] = useState<ProfileModalAba>(abaInicial(kind, initialTab));
   const [salvandoStatus, setSalvandoStatus] = useState(false);
   const [erroStatus, setErroStatus] = useState('');
 
   useEffect(() => {
-    setAba(kind === 'startup' ? 'briefing' : 'tese');
+    setAba(abaInicial(kind, initialTab));
     setErroStatus('');
-  }, [open, kind, profileId]);
+  }, [open, kind, profileId, initialTab]);
 
   useEffect(() => {
     if (!open || !profileId) {
@@ -278,7 +292,7 @@ export function ProfileModal({
       onClose={onClose}
       size="xl"
       title={kind === 'startup' ? 'Perfil da startup' : 'Perfil do investidor'}
-      footer={rodape}
+      footer={hideActions ? undefined : rodape}
     >
       {carregando ? (
         <div className="space-y-5" aria-busy="true" aria-live="polite">
@@ -351,7 +365,7 @@ export function ProfileModal({
             ) : null}
           </div>
 
-          <Tabs tabs={abas} active={aba} onChange={setAba} />
+          <Tabs tabs={abas} active={aba} onChange={(id) => setAba(id as ProfileModalAba)} />
 
           {kind === 'startup' && startup ? (
             aba === 'briefing' ? (
