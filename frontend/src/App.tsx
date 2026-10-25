@@ -7,8 +7,8 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard';
+import { Connections } from './pages/Connections';
 import { Profile } from './pages/Profile';
-import { Matchmaking } from './pages/Matchmaking';
 import { Messages } from './pages/Messages';
 import { Appointments } from './pages/Appointments';
 import { Moderation } from './pages/Moderation';
@@ -26,7 +26,7 @@ function Protegida({ children, perfis }: { children: ReactElement; perfis?: User
   }
 
   if (perfis && !perfis.includes(user.role)) {
-    return <Navigate to={user.role === 'ADMIN' ? '/moderacao' : '/dashboard'} replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -67,13 +67,14 @@ export default function App() {
         }
       />
       <Route
-        path="/matchmaking"
+        path="/conexoes"
         element={
           <Protegida>
-            <Matchmaking />
+            <Connections />
           </Protegida>
         }
       />
+      <Route path="/matchmaking" element={<Navigate to="/conexoes" replace />} />
       <Route
         path="/mensagens"
         element={

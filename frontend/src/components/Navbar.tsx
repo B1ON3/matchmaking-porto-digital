@@ -18,11 +18,13 @@ export function Navbar() {
   const temPerfil = hasRole('STARTUP', 'INVESTOR', 'MENTOR');
   const ehAdmin = hasRole('ADMIN');
 
+  const inicio = ehAdmin ? { to: '/dashboard', label: 'Ecossistema' } : { to: '/dashboard', label: 'Meu painel' };
+
   const links = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/matchmaking', label: 'Matchmaking' },
+    inicio,
+    { to: '/conexoes', label: 'Conexões' },
     ...(temPerfil ? [{ to: '/perfil', label: 'Meu perfil' }] : []),
-    { to: '/mensagens', label: 'Mensagens' },
+    { to: '/mensagens', label: 'Conversas' },
     ...(ehAdmin ? [{ to: '/moderacao', label: 'Moderação' }] : []),
   ];
 
@@ -54,7 +56,7 @@ export function Navbar() {
             type="button"
             onClick={() => abrirAgenda()}
             className="btn-secondary relative px-3 py-1.5 sm:px-4 sm:py-2"
-            aria-label={`Abrir agenda${upcomingCount > 0 ? ` (${upcomingCount} próximos)` : ''}`}
+            aria-label="Abrir agenda"
           >
             Agenda
             {upcomingCount > 0 ? (
