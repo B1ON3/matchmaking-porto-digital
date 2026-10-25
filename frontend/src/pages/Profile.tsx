@@ -18,23 +18,16 @@ export function Profile() {
     state: perfil?.state ?? 'PE',
     sector: ehStartup && perfil && 'sector' in perfil ? perfil.sector : '',
     stage: ehStartup && perfil && 'stage' in perfil ? perfil.stage : 'Seed',
-    description:
-      ehStartup && perfil && 'description' in perfil ? perfil.description : '',
+    description: ehStartup && perfil && 'description' in perfil ? perfil.description : '',
     needs: ehStartup && perfil && 'needs' in perfil ? (perfil.needs ?? '') : '',
-    sectorInterest:
-      !ehStartup && perfil && 'sectorInterest' in perfil ? perfil.sectorInterest : '',
-    stageInterest:
-      !ehStartup && perfil && 'stageInterest' in perfil ? perfil.stageInterest : '',
-    ticketMin:
-      !ehStartup && perfil && 'ticketMin' in perfil ? String(perfil.ticketMin) : '50000',
-    ticketMax:
-      !ehStartup && perfil && 'ticketMax' in perfil ? String(perfil.ticketMax) : '300000',
+    sectorInterest: !ehStartup && perfil && 'sectorInterest' in perfil ? perfil.sectorInterest : '',
+    stageInterest: !ehStartup && perfil && 'stageInterest' in perfil ? perfil.stageInterest : '',
+    ticketMin: !ehStartup && perfil && 'ticketMin' in perfil ? String(perfil.ticketMin) : '50000',
+    ticketMax: !ehStartup && perfil && 'ticketMax' in perfil ? String(perfil.ticketMax) : '300000',
     bio: !ehStartup && perfil && 'bio' in perfil ? (perfil.bio ?? '') : '',
   });
 
-  const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(
-    null,
-  );
+  const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   function atualizar(campo: keyof typeof form, valor: string) {
@@ -81,18 +74,15 @@ export function Profile() {
   }
 
   if (!user || !perfil) {
-    return (
-      <Alert mensagem="Seu perfil não foi encontrado. Refaça o cadastro para criar o perfil." />
-    );
+    return <Alert mensagem="Seu perfil não foi encontrado. Refaça o cadastro para criar o perfil." />;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Meu perfil</h1>
-        <p className="text-sm text-slate-500">
-          Quanto mais completo, melhor o algoritmo te casa com o perfil certo.
-        </p>
+        <p className="eyebrow">Identidade</p>
+        <h1 className="mt-1 font-display text-3xl font-semibold text-slate-900">Meu perfil</h1>
+        <p className="text-sm text-slate-500">Quanto mais completo, melhor o algoritmo te casa com o perfil certo.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="card max-w-3xl space-y-4">

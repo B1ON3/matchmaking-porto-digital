@@ -71,19 +71,15 @@ export function Matchmaking() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Matchmaking</h1>
+          <p className="eyebrow">Curadoria</p>
+          <h1 className="mt-1 font-display text-3xl font-semibold text-slate-900">Matchmaking</h1>
           <p className="text-sm text-slate-500">
             Perfis ordenados por afinidade de setor, estágio, faixa de investimento e região.
           </p>
         </div>
 
         {user?.role === 'STARTUP' && (
-          <button
-            type="button"
-            onClick={recalcular}
-            className="btn-secondary"
-            disabled={recalculando}
-          >
+          <button type="button" onClick={recalcular} className="btn-secondary" disabled={recalculando}>
             {recalculando ? 'Recalculando...' : 'Recalcular matches'}
           </button>
         )}
@@ -120,14 +116,12 @@ export function Matchmaking() {
             const ehStartupVendo = user?.role === 'STARTUP';
             const perfil = ehStartupVendo ? match.investor : match.startup;
 
-            const nomeContato = ehStartupVendo
-              ? match.investorUser?.name
-              : match.startupUser?.name;
+            const nomeContato = ehStartupVendo ? match.investorUser?.name : match.startupUser?.name;
 
             const titulo =
               perfil && 'companyName' in perfil && perfil.companyName
                 ? perfil.companyName
-                : nomeContato ?? 'Perfil do ecossistema';
+                : (nomeContato ?? 'Perfil do ecossistema');
 
             const subtitulo =
               perfil && 'sector' in perfil
@@ -146,27 +140,17 @@ export function Matchmaking() {
                   <ScoreBadge score={match.score} />
                 </div>
 
-                {match.reason && (
-                  <p className="text-sm text-slate-600">{match.reason}</p>
-                )}
+                {match.reason && <p className="text-sm text-slate-600">{match.reason}</p>}
 
                 <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                   <span className="badge bg-slate-100 text-slate-600">{match.status}</span>
 
                   {match.status === 'PENDENTE' && (
                     <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => responder(match.id, 'RECUSADO')}
-                        className="btn-secondary"
-                      >
+                      <button type="button" onClick={() => responder(match.id, 'RECUSADO')} className="btn-secondary">
                         Recusar
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => responder(match.id, 'ACEITO')}
-                        className="btn-primary"
-                      >
+                      <button type="button" onClick={() => responder(match.id, 'ACEITO')} className="btn-primary">
                         Conectar
                       </button>
                     </div>

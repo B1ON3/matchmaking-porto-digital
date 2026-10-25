@@ -6,8 +6,7 @@ import { auditService } from '../services';
 import { extractErrorMessage } from '../services/api';
 import type { AuditLog } from '../types';
 
-const dataHora = (iso: string) =>
-  new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+const dataHora = (iso: string) => new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
 export function Moderation() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -51,7 +50,8 @@ export function Moderation() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Moderação e auditoria</h1>
+        <p className="eyebrow">Governança</p>
+        <h1 className="mt-1 font-display text-3xl font-semibold text-slate-900">Moderação e auditoria</h1>
         <p className="text-sm text-slate-500">
           Tudo que um administrador faz na plataforma fica registrado aqui (RNF10).
         </p>
@@ -62,12 +62,7 @@ export function Moderation() {
           <label htmlFor="f-entidade" className="label">
             Filtrar por entidade
           </label>
-          <select
-            id="f-entidade"
-            className="input"
-            value={entidade}
-            onChange={(e) => setEntidade(e.target.value)}
-          >
+          <select id="f-entidade" className="input" value={entidade} onChange={(e) => setEntidade(e.target.value)}>
             <option value="">Todas</option>
             <option value="AuditLog">AuditLog</option>
             <option value="StartupProfile">StartupProfile</option>
@@ -106,9 +101,7 @@ export function Moderation() {
             <tbody className="divide-y divide-slate-100">
               {logs.map((log) => (
                 <tr key={log.id}>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                    {dataHora(log.createdAt)}
-                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{dataHora(log.createdAt)}</td>
                   <td className="px-4 py-3 font-medium text-slate-900">{log.action}</td>
                   <td className="px-4 py-3 text-slate-600">{log.entity}</td>
                   <td className="px-4 py-3 text-slate-600">{log.user?.name ?? 'anônimo'}</td>

@@ -14,8 +14,7 @@ interface Conversa {
   naoLidas: number;
 }
 
-const dataHora = (iso: string) =>
-  new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+const dataHora = (iso: string) => new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
 export function Messages() {
   const { user } = useAuth();
@@ -122,7 +121,8 @@ export function Messages() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Mensagens</h1>
+        <p className="eyebrow">Conexões</p>
+        <h1 className="mt-1 font-display text-3xl font-semibold text-slate-900">Mensagens</h1>
         <p className="text-sm text-slate-500">Converse direto com quem deu match com você.</p>
       </div>
 
@@ -143,9 +143,7 @@ export function Messages() {
                     type="button"
                     onClick={() => setSelecionada(conversa.usuario.id)}
                     className={`w-full rounded-lg px-3 py-2 text-left transition ${
-                      selecionada === conversa.usuario.id
-                        ? 'bg-porto-50 text-porto-800'
-                        : 'hover:bg-slate-50'
+                      selecionada === conversa.usuario.id ? 'bg-porto-50 text-porto-800' : 'hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -154,9 +152,7 @@ export function Messages() {
                         <span className="badge bg-porto-600 text-white">{conversa.naoLidas}</span>
                       )}
                     </div>
-                    <p className="truncate text-xs text-slate-500">
-                      {conversa.ultimaMensagem.content}
-                    </p>
+                    <p className="truncate text-xs text-slate-500">{conversa.ultimaMensagem.content}</p>
                   </button>
                 </li>
               ))}
@@ -169,23 +165,14 @@ export function Messages() {
                 const minha = mensagem.senderId === user?.id;
 
                 return (
-                  <div
-                    key={mensagem.id}
-                    className={`flex ${minha ? 'justify-end' : 'justify-start'}`}
-                  >
+                  <div key={mensagem.id} className={`flex ${minha ? 'justify-end' : 'justify-start'}`}>
                     <div
                       className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
-                        minha
-                          ? 'bg-porto-600 text-white'
-                          : 'bg-slate-100 text-slate-800'
+                        minha ? 'bg-porto-600 text-white' : 'bg-slate-100 text-slate-800'
                       }`}
                     >
                       <p>{mensagem.content}</p>
-                      <p
-                        className={`mt-1 text-[11px] ${
-                          minha ? 'text-porto-100' : 'text-slate-400'
-                        }`}
-                      >
+                      <p className={`mt-1 text-[11px] ${minha ? 'text-porto-100' : 'text-slate-400'}`}>
                         {dataHora(mensagem.createdAt)}
                       </p>
                     </div>

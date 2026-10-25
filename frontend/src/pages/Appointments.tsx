@@ -7,8 +7,7 @@ import { appointmentService } from '../services';
 import { extractErrorMessage } from '../services/api';
 import type { Appointment, AppointmentStatus } from '../types';
 
-const dataHora = (iso: string) =>
-  new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+const dataHora = (iso: string) => new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
 const corStatus: Record<AppointmentStatus, string> = {
   AGENDADO: 'bg-porto-50 text-porto-700',
@@ -70,9 +69,7 @@ export function Appointments() {
       });
 
       setAgendamentos((atual) =>
-        [...atual, criado].sort(
-          (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
-        ),
+        [...atual, criado].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()),
       );
 
       setForm({ title: '', description: '', scheduledAt: '' });
@@ -86,9 +83,7 @@ export function Appointments() {
   async function mudarStatus(id: string, status: AppointmentStatus) {
     try {
       const atualizado = await appointmentService.updateStatus(id, status);
-      setAgendamentos((atual) =>
-        atual.map((item) => (item.id === id ? atualizado : item)),
-      );
+      setAgendamentos((atual) => atual.map((item) => (item.id === id ? atualizado : item)));
     } catch (e) {
       setErro(extractErrorMessage(e));
     }
@@ -106,7 +101,8 @@ export function Appointments() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Agendamentos</h1>
+        <p className="eyebrow">Agenda</p>
+        <h1 className="mt-1 font-display text-3xl font-semibold text-slate-900">Agendamentos</h1>
         <p className="text-sm text-slate-500">Marque as conversas que você quer ter.</p>
       </div>
 
@@ -164,10 +160,7 @@ export function Appointments() {
       {carregando ? (
         <Spinner texto="Carregando sua agenda..." />
       ) : agendamentos.length === 0 ? (
-        <EmptyState
-          titulo="Nenhum agendamento"
-          descricao="Use o formulário acima para marcar sua primeira conversa."
-        />
+        <EmptyState titulo="Nenhum agendamento" descricao="Use o formulário acima para marcar sua primeira conversa." />
       ) : (
         <ul className="space-y-3">
           {agendamentos.map((agendamento) => (
@@ -176,15 +169,11 @@ export function Appointments() {
                 <div className="min-w-0">
                   <h3 className="font-medium text-slate-900">{agendamento.title}</h3>
                   <p className="text-sm text-slate-500">{dataHora(agendamento.scheduledAt)}</p>
-                  {agendamento.description && (
-                    <p className="mt-1 text-sm text-slate-600">{agendamento.description}</p>
-                  )}
+                  {agendamento.description && <p className="mt-1 text-sm text-slate-600">{agendamento.description}</p>}
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className={`badge ${corStatus[agendamento.status]}`}>
-                    {agendamento.status}
-                  </span>
+                  <span className={`badge ${corStatus[agendamento.status]}`}>{agendamento.status}</span>
                 </div>
               </div>
 
