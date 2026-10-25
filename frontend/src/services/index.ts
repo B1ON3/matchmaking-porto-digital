@@ -1,5 +1,16 @@
 import { api } from './api';
-import type { Appointment, AuditLog, Match, Message, User } from '../types';
+import type {
+  AdminOverview,
+  Appointment,
+  AuditLog,
+  InvestorInsights,
+  Match,
+  Message,
+  Project,
+  ProjectStatus,
+  StartupInsights,
+  User,
+} from '../types';
 
 interface AuthResponse {
   token: string;
@@ -42,6 +53,11 @@ export const startupService = {
     return data;
   },
 
+  async getInsights(id: string) {
+    const { data } = await api.get<StartupInsights>(`/v1/startups/${id}/insights`);
+    return data;
+  },
+
   async update(id: string, dados: Record<string, unknown>) {
     const { data } = await api.put(`/v1/startups/${id}`, dados);
     return data;
@@ -60,6 +76,11 @@ export const investorService = {
 
   async getById(id: string) {
     const { data } = await api.get(`/v1/investors/${id}`);
+    return data;
+  },
+
+  async getInsights(id: string) {
+    const { data } = await api.get<InvestorInsights>(`/v1/investors/${id}/insights`);
     return data;
   },
 
@@ -119,7 +140,7 @@ export const appointmentService = {
     return data;
   },
 
-  async create(dados: { title: string; description?: string; scheduledAt: string }) {
+  async create(dados: { title: string; description?: string; scheduledAt: string; matchId?: string }) {
     const { data } = await api.post<Appointment>('/v1/appointments', dados);
     return data;
   },
@@ -142,5 +163,37 @@ export const auditService = {
 
   async remove(id: string) {
     await api.delete(`/v1/audit/${id}`);
+  },
+};
+
+export const adminService = {
+  async getOverview() {
+    const { data } = await api.get<AdminOverview>('/v1/admin/overview');
+    return data;
+  },
+};
+
+export const projectService = {
+  async list(startupId: string) {
+    const { data } = await api.get<Project[]>(`/v1/startups/${startupId}/projects`);
+    return data;
+  },
+
+  async create(startupId: string, dados: { title: string; summary?: string; status?: ProjectStatus }) {
+    const { data } = await api.post<Project>(`/v1/startups/${startupId}/projects`, dados);
+    return data;
+  },
+
+  async update(
+    startupId: string,
+    projectId: string,
+    dados: Partial<{ title: string; summary: string; status: ProjectStatus }>,
+  ) {
+    const { data } = await api.put<Project>(`/v1/startups/${startupId}/projects/${projectId}`, dados);
+    return data;
+  },
+
+  async remove(startupId: string, projectId: string) {
+    await api.delete(`/v1/startups/${startupId}/projects/${projectId}`);
   },
 };
