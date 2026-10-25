@@ -46,3 +46,5 @@ desktop.ini
 # Logs do sistema
 npm-debug.log
 yarn-error.log
+# Documentos locais (nao versionar)
+docs/
