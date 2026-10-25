@@ -99,6 +99,60 @@ async function main() {
 
   assert.equal(removido.status, 204);
 
+  const matchesDaStartup = await api('/v1/matches?minimo=0&porPagina=50', { token: startupToken });
+  const matchId = matchesDaStartup.body.matches[0].id;
+
+  const comMatch = await api('/v1/appointments', {
+    method: 'POST',
+    token: startupToken,
+    body: JSON.stringify({
+      title: '[Smoke] Reunião vinculada',
+      description: 'Teste de vínculo',
+      scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+      matchId,
+    }),
+  });
+
+  assert.equal(comMatch.status, 201);
+  assert.equal(comMatch.body.matchId, matchId);
+
+  const semMatch = await api('/v1/appointments', {
+    method: 'POST',
+    token: startupToken,
+    body: JSON.stringify({
+      title: '[Smoke] Reunião privada',
+      scheduledAt: new Date(Date.now() + 172800000).toISOString(),
+    }),
+  });
+
+  assert.equal(semMatch.status, 201);
+
+  const agendaInvestidor = await api('/v1/appointments?futuros=false', {
+    token: investor.body.token,
+  });
+  const titulos = agendaInvestidor.body.map((item: { title: string }) => item.title);
+
+  assert.ok(titulos.includes('[Smoke] Reunião vinculada'));
+  assert.ok(!titulos.includes('[Smoke] Reunião privada'));
+
+  const privadaDoInvestidor = await api(`/v1/appointments/${semMatch.body.id}`, {
+    token: investor.body.token,
+  });
+
+  assert.equal(privadaDoInvestidor.status, 404);
+
+  const limparVinculada = await api(`/v1/appointments/${comMatch.body.id}`, {
+    method: 'DELETE',
+    token: startupToken,
+  });
+  const limparPrivada = await api(`/v1/appointments/${semMatch.body.id}`, {
+    method: 'DELETE',
+    token: startupToken,
+  });
+
+  assert.equal(limparVinculada.status, 204);
+  assert.equal(limparPrivada.status, 204);
+
   const admin = await api('/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email: 'admin@porto.digital', password: 'senha123' }),
