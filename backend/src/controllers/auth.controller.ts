@@ -95,23 +95,41 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
   const { email, password } = loginSchema.parse(req.body);
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const credenciais = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, passwordHash: true },
+  });
 
-  if (!user) {
+  if (!credenciais) {
     throw HttpError.unauthorized('email ou senha invalidos');
   }
 
-  const senhaConfere = await comparePassword(password, user.passwordHash);
+  const senhaConfere = await comparePassword(password, credenciais.passwordHash);
 
   if (!senhaConfere) {
     throw HttpError.unauthorized('email ou senha invalidos');
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: credenciais.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true,
+      startupProfile: true,
+      investorProfile: true,
+    },
+  });
+
+  if (!user) {
+    throw HttpError.unauthorized('email ou senha invalidos');
+  }
+
   const token = generateToken({ sub: user.id, email: user.email, role: user.role });
 
-  const { passwordHash, ...userSemSenha } = user;
-
-  res.json({ token, user: userSemSenha });
+  res.json({ token, user });
 }
 
 // POST /api/auth/reset-password
