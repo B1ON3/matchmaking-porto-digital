@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useAgenda } from '../context/AgendaContext';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import type { UserRole } from '../types';
@@ -13,6 +14,7 @@ const ROTULOS: Record<UserRole, string> = {
 
 export function Navbar() {
   const { user, logout, hasRole } = useAuth();
+  const { open: abrirAgenda, upcomingCount } = useAgenda();
   const temPerfil = hasRole('STARTUP', 'INVESTOR', 'MENTOR');
   const ehAdmin = hasRole('ADMIN');
 
@@ -21,7 +23,6 @@ export function Navbar() {
     { to: '/matchmaking', label: 'Matchmaking' },
     ...(temPerfil ? [{ to: '/perfil', label: 'Meu perfil' }] : []),
     { to: '/mensagens', label: 'Mensagens' },
-    { to: '/agendamentos', label: 'Agendamentos' },
     ...(ehAdmin ? [{ to: '/moderacao', label: 'Moderação' }] : []),
   ];
 
@@ -49,6 +50,20 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => abrirAgenda()}
+            className="btn-secondary relative px-3 py-1.5 sm:px-4 sm:py-2"
+            aria-label={`Abrir agenda${upcomingCount > 0 ? ` (${upcomingCount} próximos)` : ''}`}
+          >
+            Agenda
+            {upcomingCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-barro-600 px-1 text-[10px] font-bold leading-[18px] text-white">
+                {upcomingCount > 9 ? '9+' : upcomingCount}
+              </span>
+            ) : null}
+          </button>
+
           <ThemeToggle />
 
           <div className="hidden text-right sm:block">
