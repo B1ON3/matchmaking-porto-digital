@@ -52,7 +52,8 @@
         "backend/src/server.ts",
         "backend/src/scripts/**/*.ts",
         "backend/src/**/*.test.ts",
-        "backend/prisma/seed.ts"
+        "backend/prisma/seed.ts",
+        "backend/src/utils/mailer.ts"
       ],
       "rules": {
         "no-console": "off"

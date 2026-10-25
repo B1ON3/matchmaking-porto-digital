@@ -1,11 +1,14 @@
 import type { Request, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { z } from 'zod';
+import { env } from '../config/env';
 import { prisma } from '../config/prisma';
+import { redefinirSenha, solicitarRedefinicao } from '../services/password-reset.service';
 import { generateToken } from '../services/token.service';
 import { comparePassword, hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
 import { emailSchema } from '../utils/email';
+import { enviarEmailRedefinicao } from '../utils/mailer';
 
 const cadastroSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
@@ -40,8 +43,12 @@ const loginSchema = z.object({
   password: z.string().min(1, 'informe a senha'),
 });
 
-const redefinirSenhaSchema = z.object({
+const solicitarResetSchema = z.object({
   email: emailSchema,
+});
+
+const redefinirSenhaSchema = z.object({
+  token: z.string().trim().min(32, 'codigo invalido').max(128, 'codigo invalido'),
   password: z.string().min(6, 'a senha precisa de pelo menos 6 caracteres'),
 });
 
@@ -132,20 +139,30 @@ export async function login(req: Request, res: Response) {
   res.json({ token, user });
 }
 
-// POST /api/auth/reset-password
-export async function resetPassword(req: Request, res: Response) {
-  const { email, password } = redefinirSenhaSchema.parse(req.body);
+// POST /api/auth/forgot-password
+// resposta e sempre a mesma, exista ou nao a conta, para nao vazar quais e-mails
+// estao cadastrados. em desenvolvimento o token volta no corpo para testar o fluxo.
+export async function forgotPassword(req: Request, res: Response) {
+  const { email } = solicitarResetSchema.parse(req.body);
+  const solicitacao = await solicitarRedefinicao(email);
 
-  const user = await prisma.user.findUnique({ where: { email } });
-
-  if (!user) {
-    throw HttpError.notFound('nao encontrei uma conta com esse email');
+  if (solicitacao) {
+    await enviarEmailRedefinicao(email, solicitacao.token, solicitacao.expiraEm);
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash: await hashPassword(password) },
+  res.json({
+    mensagem: 'Se existir uma conta com esse e-mail, enviamos as instrucoes de redefinicao.',
+    ...(solicitacao && !env.isProduction
+      ? { token: solicitacao.token, expiraEm: solicitacao.expiraEm.toISOString() }
+      : {}),
   });
+}
+
+// POST /api/auth/reset-password
+export async function resetPassword(req: Request, res: Response) {
+  const { token, password } = redefinirSenhaSchema.parse(req.body);
+
+  await redefinirSenha(token, password);
 
   res.json({ mensagem: 'senha atualizada, ja pode entrar com a nova senha' });
 }

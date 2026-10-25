@@ -1,13 +1,20 @@
 import { Router } from 'express';
 import { UserRole } from '@prisma/client';
-import { login, me, register, resetPassword } from '../controllers/auth.controller';
+import { forgotPassword, login, me, register, resetPassword } from '../controllers/auth.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
+import {
+  forgotPasswordLimiter,
+  loginLimiter,
+  registerLimiter,
+  resetPasswordLimiter,
+} from '../middlewares/rate-limit.middleware';
 
 export const authRoutes = Router();
 
-authRoutes.post('/register', register);
-authRoutes.post('/login', login);
-authRoutes.post('/reset-password', resetPassword);
+authRoutes.post('/register', registerLimiter, register);
+authRoutes.post('/login', loginLimiter, login);
+authRoutes.post('/forgot-password', forgotPasswordLimiter, forgotPassword);
+authRoutes.post('/reset-password', resetPasswordLimiter, resetPassword);
 
 // so quem tem token valido acessa o proprio perfil (RF07)
 authRoutes.get('/me', authenticate, me);

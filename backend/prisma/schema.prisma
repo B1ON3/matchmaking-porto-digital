@@ -21,8 +21,23 @@ model User {
   receivedMessages Message[]        @relation("MessageRecipient")
   sentMessages     Message[]        @relation("MessageSender")
   startupProfile   StartupProfile?
+  passwordResets   PasswordResetToken[]
 
   @@map("users")
+}
+
+// token de redefinicao de senha: guardamos apenas o hash, com expiracao e uso unico
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 model StartupProfile {
