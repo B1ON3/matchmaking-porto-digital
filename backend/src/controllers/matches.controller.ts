@@ -112,6 +112,12 @@ export async function show(req: Request, res: Response) {
     throw HttpError.notFound('match nao encontrado');
   }
 
+  const ehEnvolvido = match.startup.userId === req.user!.id || match.investor.userId === req.user!.id;
+
+  if (!ehEnvolvido && req.user!.role !== UserRole.ADMIN) {
+    throw HttpError.forbidden('voce nao faz parte desse match');
+  }
+
   res.json(match);
 }
 
