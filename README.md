@@ -218,3 +218,57 @@ matchmaking-porto-digital/
 | RNF05 / RNF09 | Escalabilidade e modularidade                | Contêineres isolados via Docker e API REST desacoplada                                          |
 | RNF02         | Segurança de sessão                          | JWT com expiração + hash de senha com Bcrypt                                                    |
 | RNF04 / RNF08 | Responsividade                               | Layout em Tailwind CSS com navegação adaptée a desktop e celular                                |
+
+## 9. Deploy na Vercel (frontend + backend)
+
+O repositório é publicado como **dois projetos Vercel independentes**, cada um com seu `package.json`.
+
+### Backend (API)
+
+- **Root Directory:** `backend`
+- **Build Command:** `npm run vercel-build` (já definido em `backend/vercel.json`)
+- A API é servida pela função `backend/api/[...path].ts`, que expõe o Express em `/api/*`.
+
+Environment Variables (Production e Preview):
+
+| Variável                         | Valor                                                                                                                  |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                   | connection string do Supabase (use o pooler: `...pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1`) |
+| `JWT_SECRET`                     | chave forte, diferente da de desenvolvimento                                                                           |
+| `JWT_EXPIRES_IN`                 | `1d`                                                                                                                   |
+| `PASSWORD_RESET_EXPIRES_MINUTES` | `30`                                                                                                                   |
+| `CORS_ORIGIN`                    | `https://matchmaking-frontend-ochre.vercel.app,https://matchmaking-frontend-*.vercel.app`                              |
+| `NODE_ENV`                       | `production`                                                                                                           |
+
+Migrations devem rodar com a conexão direta do Supabase (porta `5432`), não com o pooler:
+
+```bash
+cd backend
+DATABASE_URL="postgresql://...@...supabase.com:5432/postgres" npm run prisma:deploy
+```
+
+> Sem o domínio do front no `CORS_ORIGIN`, o navegador bloqueia as chamadas.
+> O `*` cobre exatamente um nível de subdomínio, o que inclui os previews
+> (`matchmaking-frontend-git-main-b1on3.vercel.app`).
+
+### Frontend (SPA)
+
+- **Root Directory:** `frontend`
+- **Framework:** Vite (build `npm run build`, output `dist`)
+- **Environment Variable:** `VITE_API_URL=https://<projeto-backend>.vercel.app/api` (Production e Preview)
+
+O valor é embutido no bundle durante o build: ao trocar a URL da API, faça um redeploy sem cache.
+
+### Como a URL da API é resolvida
+
+| Ambiente                | `VITE_API_URL`                     | URL usada             |
+| ----------------------- | ---------------------------------- | --------------------- |
+| Local (`npm run dev`)   | `http://localhost:5000/api`        | localhost             |
+| Vercel                  | `https://<backend>.vercel.app/api` | backend publicado     |
+| Produção sem a variável | ausente                            | `/api` (mesma origem) |
+
+### Checklist de validação
+
+- [ ] `GET https://<backend>.vercel.app/api/health` responde `banco: online`
+- [ ] O front publicado chama a API sem erro de CORS (aba Network)
+- [ ] Preview deployments também funcionam
