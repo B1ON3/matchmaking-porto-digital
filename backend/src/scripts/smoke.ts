@@ -59,6 +59,46 @@ async function main() {
   assert.equal(typeof investorInsights.body.metrics.appointments, 'number');
   assert.ok(investorInsights.body.profile);
 
+  const criado = await api(`/v1/startups/${startupId}/projects`, {
+    method: 'POST',
+    token: startupToken,
+    body: JSON.stringify({
+      title: 'Piloto de teste',
+      summary: 'Criado pelo smoke',
+      status: 'PLANEJADO',
+    }),
+  });
+
+  assert.equal(criado.status, 201);
+  assert.equal(criado.body.title, 'Piloto de teste');
+
+  const lista = await api(`/v1/startups/${startupId}/projects`, { token: startupToken });
+  assert.ok(lista.body.some((projeto: { id: string }) => projeto.id === criado.body.id));
+
+  const alterado = await api(`/v1/startups/${startupId}/projects/${criado.body.id}`, {
+    method: 'PUT',
+    token: startupToken,
+    body: JSON.stringify({ status: 'CONCLUIDO' }),
+  });
+
+  assert.equal(alterado.status, 200);
+  assert.equal(alterado.body.status, 'CONCLUIDO');
+
+  const invasor = await api(`/v1/startups/${startupId}/projects/${criado.body.id}`, {
+    method: 'PUT',
+    token: investor.body.token,
+    body: JSON.stringify({ title: 'Invadido' }),
+  });
+
+  assert.equal(invasor.status, 403);
+
+  const removido = await api(`/v1/startups/${startupId}/projects/${criado.body.id}`, {
+    method: 'DELETE',
+    token: startupToken,
+  });
+
+  assert.equal(removido.status, 204);
+
   const admin = await api('/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email: 'admin@porto.digital', password: 'senha123' }),

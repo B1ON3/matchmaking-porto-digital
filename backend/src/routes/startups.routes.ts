@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { UserRole } from '@prisma/client';
 import { create, list, remove, show, update } from '../controllers/startups.controller';
 import { startupInsights } from '../controllers/insights.controller';
+import { createProject, listProjects, removeProject, updateProject } from '../controllers/projects.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 export const startupRoutes = Router();
@@ -13,5 +14,9 @@ startupRoutes.get('/:id', show);
 
 // a partir daqui tudo exige token valido
 startupRoutes.use(authenticate);
+startupRoutes.get('/:id/projects', listProjects);
+startupRoutes.post('/:id/projects', authorize(UserRole.STARTUP, UserRole.ADMIN), createProject);
+startupRoutes.put('/:id/projects/:projectId', authorize(UserRole.STARTUP, UserRole.ADMIN), updateProject);
+startupRoutes.delete('/:id/projects/:projectId', authorize(UserRole.STARTUP, UserRole.ADMIN), removeProject);
 startupRoutes.put('/:id', authorize(UserRole.STARTUP, UserRole.ADMIN), update);
 startupRoutes.delete('/:id', authorize(UserRole.STARTUP, UserRole.ADMIN), remove);
