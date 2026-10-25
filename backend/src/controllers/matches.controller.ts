@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
@@ -118,9 +118,7 @@ export async function show(req: Request, res: Response) {
 // PUT /api/matches/:id/status  -> aceitar ou recusar uma conexao
 export async function updateStatus(req: Request, res: Response) {
   const { id } = z.object({ id: z.string().uuid() }).parse(req.params);
-  const { status } = z
-    .object({ status: z.enum(['ACEITO', 'RECUSADO', 'PENDENTE']) })
-    .parse(req.body);
+  const { status } = z.object({ status: z.enum(['ACEITO', 'RECUSADO', 'PENDENTE']) }).parse(req.body);
 
   const match = await prisma.match.findUnique({
     where: { id },
@@ -131,8 +129,7 @@ export async function updateStatus(req: Request, res: Response) {
     throw HttpError.notFound('match nao encontrado');
   }
 
-  const ehEnvolvido =
-    match.startup.userId === req.user!.id || match.investor.userId === req.user!.id;
+  const ehEnvolvido = match.startup.userId === req.user!.id || match.investor.userId === req.user!.id;
 
   if (!ehEnvolvido && req.user!.role !== UserRole.ADMIN) {
     throw HttpError.forbidden('voce nao faz parte desse match');

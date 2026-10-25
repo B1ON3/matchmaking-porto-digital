@@ -10,8 +10,7 @@ export function ScoreBadge({ score }: ScoreBadgeProps) {
         ? 'bg-amber-100 text-amber-700'
         : 'bg-slate-100 text-slate-600';
 
-  const rotulo =
-    score >= 70 ? 'Alta afinidade' : score >= 40 ? 'Afinidade média' : 'Afinidade baixa';
+  const rotulo = score >= 70 ? 'Alta afinidade' : score >= 40 ? 'Afinidade média' : 'Afinidade baixa';
 
   return (
     <span className={`badge ${cor}`} title={rotulo}>

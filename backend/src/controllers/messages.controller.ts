@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
 import { HttpError } from '../utils/http-error';
@@ -42,9 +42,7 @@ export async function create(req: Request, res: Response) {
 
 // GET /api/messages?conversaCom=<userId>
 export async function list(req: Request, res: Response) {
-  const { conversaCom } = z
-    .object({ conversaCom: z.string().uuid().optional() })
-    .parse(req.query);
+  const { conversaCom } = z.object({ conversaCom: z.string().uuid().optional() }).parse(req.query);
 
   const mensagens = await prisma.message.findMany({
     where: {
@@ -98,11 +96,9 @@ export async function conversas(req: Request, res: Response) {
   >();
 
   for (const mensagem of mensagens) {
-    const outroId =
-      mensagem.senderId === req.user!.id ? mensagem.recipientId : mensagem.senderId;
+    const outroId = mensagem.senderId === req.user!.id ? mensagem.recipientId : mensagem.senderId;
 
-    const outro =
-      mensagem.senderId === req.user!.id ? mensagem.recipient : mensagem.sender;
+    const outro = mensagem.senderId === req.user!.id ? mensagem.recipient : mensagem.sender;
 
     const existente = mapa.get(outroId);
 

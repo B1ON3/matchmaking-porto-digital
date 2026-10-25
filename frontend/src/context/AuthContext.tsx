@@ -1,15 +1,8 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import type { ReactNode } from "react";
-import type { User, UserRole } from "../types";
-import { authService } from "../services";
-import { clearToken, getToken, setToken } from "../services/api";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import type { User, UserRole } from '../types';
+import { authService } from '../services';
+import { clearToken, getToken, setToken } from '../services/api';
 
 interface AuthContextValue {
   user: User | null;
@@ -68,10 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     }
 
-    window.addEventListener("matchmaking:unauthorized", aoExpirar);
+    window.addEventListener('matchmaking:unauthorized', aoExpirar);
 
-    return () =>
-      window.removeEventListener("matchmaking:unauthorized", aoExpirar);
+    return () => window.removeEventListener('matchmaking:unauthorized', aoExpirar);
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -91,10 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const hasRole = useCallback(
-    (...perfis: UserRole[]) => Boolean(user && perfis.includes(user.role)),
-    [user],
-  );
+  const hasRole = useCallback((...perfis: UserRole[]) => Boolean(user && perfis.includes(user.role)), [user]);
 
   const valor = useMemo<AuthContextValue>(
     () => ({
@@ -103,10 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
-      isStartup: user?.role === "STARTUP",
-      isInvestor: user?.role === "INVESTOR",
-      isMentor: user?.role === "MENTOR",
-      isAdmin: user?.role === "ADMIN",
+      isStartup: user?.role === 'STARTUP',
+      isInvestor: user?.role === 'INVESTOR',
+      isMentor: user?.role === 'MENTOR',
+      isAdmin: user?.role === 'ADMIN',
       hasRole,
     }),
     [user, loading, login, register, logout, hasRole],
@@ -119,7 +108,7 @@ export function useAuth() {
   const contexto = useContext(AuthContext);
 
   if (!contexto) {
-    throw new Error("useAuth precisa estar dentro do AuthProvider");
+    throw new Error('useAuth precisa estar dentro do AuthProvider');
   }
 
   return contexto;

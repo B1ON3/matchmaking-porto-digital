@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
-import { AppointmentStatus, Prisma, UserRole } from '@prisma/client';
+import type { Request, Response } from 'express';
+import type { Prisma } from '@prisma/client';
+import { AppointmentStatus, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
 import { HttpError } from '../utils/http-error';

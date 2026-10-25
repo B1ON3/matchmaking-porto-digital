@@ -1,0 +1,52 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "formatter": true,
+  "skills": [".opencode/skills"],
+  "plugins": ["superpowers@git+https://github.com/obra/superpowers.git"],
+  "mcp": {
+    "servers": {
+      "shadcn-ui": {
+        "type": "local",
+        "command": ["npx", "-y", "@jpisnice/shadcn-ui-mcp-server"]
+      },
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp"
+      },
+      "playwright": {
+        "type": "local",
+        "command": ["npx", "-y", "@playwright/mcp@latest"]
+      },
+      "magic-21st": {
+        "type": "local",
+        "command": ["npx", "-y", "@21st-dev/magic"],
+        "environment": {
+          "API_KEY": "{env:MAGIC_API_KEY}"
+        },
+        "disabled": true
+      },
+      "firecrawl": {
+        "type": "local",
+        "command": ["npx", "-y", "firecrawl-mcp"],
+        "environment": {
+          "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}"
+        },
+        "disabled": true
+      },
+      "serena": {
+        "type": "local",
+        "command": [
+          "uvx",
+          "--from",
+          "git+https://github.com/oraios/serena",
+          "serena",
+          "start-mcp-server",
+          "--context",
+          "ide-assistant"
+        ],
+        "disabled": true
+      }
+    }
+  }
+}

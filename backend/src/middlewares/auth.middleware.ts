@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from 'express';
-import { UserRole } from '@prisma/client';
+import type { NextFunction, Request, Response } from 'express';
+import type { UserRole } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { verifyToken } from '../services/token.service';
 import { HttpError } from '../utils/http-error';

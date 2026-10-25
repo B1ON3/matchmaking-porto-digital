@@ -1,4 +1,5 @@
-import { Request, Response, Router } from 'express';
+import type { Request, Response } from 'express';
+import { Router } from 'express';
 import { prisma } from '../config/prisma';
 import { authRoutes } from './auth.routes';
 import { startupRoutes } from './startups.routes';
@@ -41,7 +42,7 @@ routes.get('/health', async (_req: Request, res: Response) => {
     await prisma.$queryRaw`SELECT 1`;
     database = 'online';
   } catch {
-    database = 'offline';
+    // banco indisponivel: mantem o valor inicial
   }
 
   res.json({

@@ -48,8 +48,7 @@ api.interceptors.response.use(
 export function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const dados = error.response?.data as
-      | { error?: string; details?: { campo: string; mensagem: string }[] }
-      | undefined;
+      { error?: string; details?: { campo: string; mensagem: string }[] } | undefined;
 
     if (dados?.details?.length) {
       return dados.details.map((d) => `${d.campo}: ${d.mensagem}`).join(' | ');

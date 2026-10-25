@@ -12,7 +12,7 @@ export function Gauge({ value, label = 'Potencial' }: GaugeProps) {
         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</span>
         <span className="font-display text-lg font-semibold text-slate-900 dark:text-areia-100">
           {Math.round(normalizado)}
-          <span className="ml-0.5 text-xs font-sans font-normal text-slate-500 dark:text-slate-400">/100</span>
+          <span className="ml-0.5 font-sans text-xs font-normal text-slate-500 dark:text-slate-400">/100</span>
         </span>
       </div>
       <div

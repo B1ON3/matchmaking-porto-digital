@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { getAdminOverview, getInvestorInsights, getStartupInsights } from '../services/insights.service';
 

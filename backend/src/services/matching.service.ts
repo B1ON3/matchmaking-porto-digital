@@ -1,6 +1,7 @@
-import { InvestorProfile, StartupProfile } from '@prisma/client';
+import type { InvestorProfile, StartupProfile } from '@prisma/client';
 import { prisma } from '../config/prisma';
-import { calculaScore as calculaScorePuro, MatchDetails } from './matching.rules';
+import type { MatchDetails } from './matching.rules';
+import { calculaScore as calculaScorePuro } from './matching.rules';
 
 export interface MatchResult {
   score: number;

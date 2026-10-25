@@ -70,7 +70,7 @@ export function Messages() {
       return;
     }
 
-    let ativo = true;
+    const ativo = true;
 
     const carregarMensagens = async () => {
       try {

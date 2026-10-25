@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
@@ -76,9 +76,7 @@ export async function list(req: Request, res: Response) {
   const { setor, estado, pagina, porPagina } = filtros;
 
   const where = {
-    ...(setor
-      ? { sectorInterest: { contains: setor, mode: 'insensitive' as const } }
-      : {}),
+    ...(setor ? { sectorInterest: { contains: setor, mode: 'insensitive' as const } } : {}),
     ...(estado ? { state: estado } : {}),
   };
 
