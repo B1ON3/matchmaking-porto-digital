@@ -7,6 +7,7 @@ import { matchRoutes } from './matches.routes';
 import { messageRoutes } from './messages.routes';
 import { appointmentRoutes } from './appointments.routes';
 import { auditRoutes } from './audit.routes';
+import { adminRoutes } from './admin.routes';
 
 export const routes = Router();
 
@@ -27,6 +28,7 @@ routes.get('/', (_req: Request, res: Response) => {
       mensagens: '/api/v1/messages',
       agendamentos: '/api/v1/appointments',
       auditoria: '/api/v1/audit',
+      admin: '/api/v1/admin',
     },
     autenticacao: 'Bearer token em /api/v1/auth/login. As rotas marcadas como privadas exigem o header Authorization.',
   });
@@ -59,3 +61,4 @@ routes.use('/v1/matches', matchRoutes);
 routes.use('/v1/messages', messageRoutes);
 routes.use('/v1/appointments', appointmentRoutes);
 routes.use('/v1/audit', auditRoutes);
+routes.use('/v1/admin', adminRoutes);

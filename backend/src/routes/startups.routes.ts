@@ -1,18 +1,14 @@
 import { Router } from 'express';
 import { UserRole } from '@prisma/client';
-import {
-  create,
-  list,
-  remove,
-  show,
-  update,
-} from '../controllers/startups.controller';
+import { create, list, remove, show, update } from '../controllers/startups.controller';
+import { startupInsights } from '../controllers/insights.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 export const startupRoutes = Router();
 
 startupRoutes.post('/', create);
 startupRoutes.get('/', list);
+startupRoutes.get('/:id/insights', authenticate, startupInsights);
 startupRoutes.get('/:id', show);
 
 // a partir daqui tudo exige token valido

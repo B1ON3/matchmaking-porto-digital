@@ -1,18 +1,14 @@
 import { Router } from 'express';
 import { UserRole } from '@prisma/client';
-import {
-  create,
-  list,
-  remove,
-  show,
-  update,
-} from '../controllers/investors.controller';
+import { create, list, remove, show, update } from '../controllers/investors.controller';
+import { investorInsights } from '../controllers/insights.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 export const investorRoutes = Router();
 
 investorRoutes.post('/', create);
 investorRoutes.get('/', list);
+investorRoutes.get('/:id/insights', authenticate, investorInsights);
 investorRoutes.get('/:id', show);
 
 investorRoutes.use(authenticate);
