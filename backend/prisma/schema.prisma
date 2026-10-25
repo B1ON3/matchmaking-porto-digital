@@ -42,11 +42,26 @@ model StartupProfile {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   matches     Match[]
+  projects    Project[]
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([sector])
   @@index([stage])
   @@map("startups")
+}
+
+model Project {
+  id        String         @id @default(uuid())
+  startupId String
+  title     String
+  summary   String?
+  status    ProjectStatus  @default(EM_ANDAMENTO)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  startup   StartupProfile @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@index([startupId])
+  @@map("projects")
 }
 
 model InvestorProfile {
@@ -70,16 +85,18 @@ model InvestorProfile {
 }
 
 model Match {
-  id         String          @id @default(uuid())
-  score      Float
-  status     MatchStatus     @default(PENDENTE)
-  reason     String?
-  startupId  String
-  investorId String
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  investor   InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Cascade)
-  startup    StartupProfile  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  id           String          @id @default(uuid())
+  score        Float
+  status       MatchStatus     @default(PENDENTE)
+  reason       String?
+  details      Json?
+  startupId    String
+  investorId   String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  appointments Appointment[]
+  investor     InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  startup      StartupProfile  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 
   @@unique([startupId, investorId])
   @@index([score])
@@ -107,10 +124,13 @@ model Appointment {
   scheduledAt DateTime
   status      AppointmentStatus @default(AGENDADO)
   createdById String
+  matchId     String?
   createdAt   DateTime          @default(now())
   createdBy   User              @relation("AppointmentCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  match       Match?            @relation(fields: [matchId], references: [id], onDelete: SetNull)
 
   @@index([scheduledAt])
+  @@index([matchId])
   @@map("appointments")
 }
 
@@ -148,4 +168,10 @@ enum AppointmentStatus {
   AGENDADO
   CONCLUIDO
   CANCELADO
+}
+
+enum ProjectStatus {
+  PLANEJADO
+  EM_ANDAMENTO
+  CONCLUIDO
 }
