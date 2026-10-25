@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Alert } from '../components/Alert';
 import { extractErrorMessage } from '../services/api';
 
-type Tipo = 'STARTUP' | 'INVESTOR' | 'MENTOR';
+type Tipo = 'STARTUP' | 'INVESTOR';
 
 export function Register() {
   const { register, user } = useAuth();
@@ -72,7 +72,7 @@ export function Register() {
           name: form.name,
           email: form.email,
           password: form.password,
-          role: tipo === 'MENTOR' ? 'MENTOR' : 'INVESTOR',
+          role: 'INVESTOR',
           investor: {
             companyName: form.companyName || undefined,
             sectorInterest: form.sectorInterest,
@@ -99,20 +99,18 @@ export function Register() {
       <div className="w-full max-w-2xl">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-slate-900">Criar conta</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Escolha seu perfil pra gente calcular a compatibilidade certa
-          </p>
+          <p className="mt-1 text-sm text-slate-500">Escolha seu perfil pra gente calcular a compatibilidade certa</p>
         </div>
 
         <div className="mb-5 flex gap-2">
-          {(['STARTUP', 'INVESTOR', 'MENTOR'] as Tipo[]).map((opcao) => (
+          {(['STARTUP', 'INVESTOR'] as Tipo[]).map((opcao) => (
             <button
               key={opcao}
               type="button"
               onClick={() => setTipo(opcao)}
               className={tipo === opcao ? 'btn-primary flex-1' : 'btn-secondary flex-1'}
             >
-              {opcao === 'STARTUP' ? 'Sou startup' : opcao === 'INVESTOR' ? 'Sou investidor anjo' : 'Sou mentor'}
+              {opcao === 'STARTUP' ? 'Sou startup' : 'Sou investidor anjo'}
             </button>
           ))}
         </div>
@@ -340,7 +338,8 @@ export function Register() {
               checked={aceitoTermos}
               onChange={(e) => setAceitoTermos(e.target.checked)}
             />
-            Li e aceito a política de uso e o tratamento dos meus dados conforme a LGPD (consentimento, finalidade e direito de exclusão).
+            Li e aceito a política de uso e o tratamento dos meus dados conforme a LGPD (consentimento, finalidade e
+            direito de exclusão).
           </label>
 
           <button type="submit" className="btn-primary w-full" disabled={enviando}>
