@@ -7,12 +7,13 @@ import { Tabs } from './Tabs';
 import { useAuth } from '../context/AuthContext';
 import { appointmentService, matchService } from '../services';
 import { extractErrorMessage } from '../services/api';
-import type { Appointment, AppointmentStatus, Match } from '../types';
+import type { Appointment, AppointmentConflictPreview, AppointmentStatus, Match } from '../types';
 
 type AbaAgenda = 'proximos' | 'concluidos' | 'cancelados';
 
 interface AgendaPanelProps {
   presetMatchId?: string;
+  presetTitle?: string;
   onChanged?: () => void;
   idPrefix?: string;
 }
@@ -54,7 +55,8 @@ function diaDoGrupo(iso: string): string {
 
 function minimoParaInput(): string {
   const agora = new Date();
-  agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+  agora.setSeconds(0, 0);
+  agora.setMinutes(agora.getMinutes() + 1 - agora.getTimezoneOffset());
   return agora.toISOString().slice(0, 16);
 }
 
@@ -73,18 +75,63 @@ function nomeDoMatch(match: Match, papel?: string): string {
   return `${startup} × ${investidor}`;
 }
 
-export function AgendaPanel({ presetMatchId, onChanged, idPrefix = 'agenda' }: AgendaPanelProps) {
+function AvisoDeConflito({
+  preview,
+  verificando,
+}: {
+  preview: AppointmentConflictPreview | null;
+  verificando: boolean;
+}) {
+  if (verificando) {
+    return (
+      <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+        Verificando disponibilidade...
+      </p>
+    );
+  }
+
+  if (!preview?.conflict) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-700/60 dark:bg-amber-900/20">
+      <p className="font-medium text-amber-900 dark:text-amber-100">Este horário já está ocupado</p>
+      <ul className="mt-1 space-y-1 text-xs text-amber-800 dark:text-amber-200">
+        {preview.conflitos.map((conflito) => (
+          <li key={conflito.id}>
+            {conflito.title} · {dataHora(conflito.scheduledAt)} · {conflito.durationMinutes} min
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
+        Escolha outro horário ou ajuste a duração para evitar sobreposição.
+      </p>
+    </div>
+  );
+}
+
+export function AgendaPanel({ presetMatchId, presetTitle, onChanged, idPrefix = 'agenda' }: AgendaPanelProps) {
   const { user } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Appointment[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [aba, setAba] = useState<AbaAgenda>('proximos');
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [verificandoConflito, setVerificandoConflito] = useState(false);
+  const [conflito, setConflito] = useState<AppointmentConflictPreview | null>(null);
   const [erro, setErro] = useState('');
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    title: string;
+    description: string;
+    scheduledAt: string;
+    durationMinutes: 30 | 60;
+    matchId: string;
+  }>({
     title: '',
     description: '',
     scheduledAt: '',
+    durationMinutes: 60,
     matchId: '',
   });
 
@@ -124,12 +171,63 @@ export function AgendaPanel({ presetMatchId, onChanged, idPrefix = 'agenda' }: A
   }, []);
 
   useEffect(() => {
-    if (!presetMatchId) {
+    if (!presetMatchId && !presetTitle) {
       return;
     }
 
-    setForm((atual) => ({ ...atual, matchId: presetMatchId }));
-  }, [presetMatchId]);
+    setForm((atual) => ({
+      ...atual,
+      ...(presetMatchId ? { matchId: presetMatchId } : {}),
+      ...(presetTitle ? { title: presetTitle } : {}),
+    }));
+  }, [presetMatchId, presetTitle]);
+
+  useEffect(() => {
+    if (!form.scheduledAt) {
+      setConflito(null);
+      setVerificandoConflito(false);
+      return;
+    }
+
+    const data = new Date(form.scheduledAt);
+
+    if (Number.isNaN(data.getTime())) {
+      setConflito(null);
+      return;
+    }
+
+    let ativo = true;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setVerificandoConflito(true);
+
+        try {
+          const preview = await appointmentService.conflicts({
+            scheduledAt: data.toISOString(),
+            durationMinutes: form.durationMinutes,
+            matchId: form.matchId || undefined,
+          });
+
+          if (ativo) {
+            setConflito(preview);
+          }
+        } catch {
+          if (ativo) {
+            setConflito(null);
+          }
+        } finally {
+          if (ativo) {
+            setVerificandoConflito(false);
+          }
+        }
+      })();
+    }, 350);
+
+    return () => {
+      ativo = false;
+      window.clearTimeout(timer);
+    };
+  }, [form.scheduledAt, form.durationMinutes, form.matchId]);
 
   const matchesAceitos = useMemo(() => matches.filter((match) => match.status === 'ACEITO'), [matches]);
 
@@ -175,13 +273,14 @@ export function AgendaPanel({ presetMatchId, onChanged, idPrefix = 'agenda' }: A
         title: form.title,
         description: form.description.trim() || undefined,
         scheduledAt: new Date(form.scheduledAt).toISOString(),
+        durationMinutes: form.durationMinutes,
         matchId: form.matchId || undefined,
       });
 
       setAgendamentos((atual) =>
         [...atual, criado].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()),
       );
-      setForm({ title: '', description: '', scheduledAt: '', matchId: '' });
+      setForm({ title: '', description: '', scheduledAt: '', durationMinutes: 60, matchId: '' });
       setAba('proximos');
       onChanged?.();
     } catch (e) {
@@ -241,19 +340,41 @@ export function AgendaPanel({ presetMatchId, onChanged, idPrefix = 'agenda' }: A
           />
         </div>
 
-        <div>
-          <label htmlFor={`${idPrefix}-data`} className="label">
-            Data e hora
-          </label>
-          <input
-            id={`${idPrefix}-data`}
-            type="datetime-local"
-            className="input"
-            min={minimoParaInput()}
-            value={form.scheduledAt}
-            onChange={(evento) => setForm((atual) => ({ ...atual, scheduledAt: evento.target.value }))}
-            required
-          />
+        <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
+          <div>
+            <label htmlFor={`${idPrefix}-data`} className="label">
+              Data e hora
+            </label>
+            <input
+              id={`${idPrefix}-data`}
+              type="datetime-local"
+              className="input"
+              min={minimoParaInput()}
+              value={form.scheduledAt}
+              onChange={(evento) => setForm((atual) => ({ ...atual, scheduledAt: evento.target.value }))}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor={`${idPrefix}-duracao`} className="label">
+              Duração
+            </label>
+            <select
+              id={`${idPrefix}-duracao`}
+              className="input"
+              value={form.durationMinutes}
+              onChange={(evento) =>
+                setForm((atual) => ({
+                  ...atual,
+                  durationMinutes: evento.target.value === '30' ? 30 : 60,
+                }))
+              }
+            >
+              <option value={30}>30 min</option>
+              <option value={60}>60 min</option>
+            </select>
+          </div>
         </div>
 
         <div>
@@ -275,6 +396,8 @@ export function AgendaPanel({ presetMatchId, onChanged, idPrefix = 'agenda' }: A
           </select>
         </div>
 
+        <AvisoDeConflito preview={conflito} verificando={verificandoConflito} />
+
         <div>
           <label htmlFor={`${idPrefix}-descricao`} className="label">
             Descrição
@@ -288,7 +411,7 @@ export function AgendaPanel({ presetMatchId, onChanged, idPrefix = 'agenda' }: A
           />
         </div>
 
-        <button type="submit" className="btn-primary w-full" disabled={salvando}>
+        <button type="submit" className="btn-primary w-full" disabled={salvando || conflito?.conflict}>
           {salvando ? 'Agendando...' : 'Agendar'}
         </button>
       </form>
@@ -328,7 +451,7 @@ export function AgendaPanel({ presetMatchId, onChanged, idPrefix = 'agenda' }: A
                       <div className="min-w-0">
                         <p className="font-medium text-slate-900 dark:text-areia-100">{agendamento.title}</p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                          {dataHora(agendamento.scheduledAt)}
+                          {dataHora(agendamento.scheduledAt)} · {agendamento.durationMinutes} min
                         </p>
                       </div>
                       <span className={`badge ${COR_STATUS[agendamento.status]}`}>

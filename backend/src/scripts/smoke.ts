@@ -126,6 +126,48 @@ async function main() {
 
   assert.equal(compatibilidadeInvestidor.status, 200);
 
+  const mensagem = await api('/v1/messages', {
+    method: 'POST',
+    token: startupToken,
+    body: JSON.stringify({ recipientId: investor.body.user.id, content: '[Smoke] contexto do match' }),
+  });
+
+  assert.equal(mensagem.status, 201);
+  assert.equal(mensagem.body.recipientId, investor.body.user.id);
+
+  const paginaMensagens = await api(`/v1/messages?conversaCom=${investor.body.user.id}&limit=10`, {
+    token: startupToken,
+  });
+
+  assert.equal(paginaMensagens.status, 200);
+  assert.ok(Array.isArray(paginaMensagens.body.messages));
+  assert.equal(typeof paginaMensagens.body.hasMore, 'boolean');
+
+  const naoLidas = await api('/v1/messages/nao-lidas', { token: investor.body.token });
+  assert.equal(naoLidas.status, 200);
+  assert.ok(naoLidas.body.total >= 1, 'mensagem nova deve contar como nao lida');
+
+  const leitura = await api(`/v1/messages/conversas/${startup.body.user.id}/read`, {
+    method: 'POST',
+    token: investor.body.token,
+  });
+
+  assert.equal(leitura.status, 200);
+  assert.ok(leitura.body.updated >= 1);
+
+  const conversas = await api('/v1/messages/conversas', { token: investor.body.token });
+  assert.equal(conversas.status, 200);
+  assert.ok(
+    conversas.body.some((conversa: { usuario: { id: string } }) => conversa.usuario.id === startup.body.user.id),
+  );
+
+  const mensagemRemovida = await api(`/v1/messages/${mensagem.body.id}`, {
+    method: 'DELETE',
+    token: startupToken,
+  });
+
+  assert.equal(mensagemRemovida.status, 204);
+
   const mentor = await api('/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email: 'mentor@porto.digital', password: 'senha123' }),
@@ -136,19 +178,53 @@ async function main() {
 
   assert.equal(compatibilidadeNegada.status, 403);
 
+  const mensagemSemMatch = await api('/v1/messages', {
+    method: 'POST',
+    token: startupToken,
+    body: JSON.stringify({ recipientId: mentor.body.user.id, content: '[Smoke] sem match' }),
+  });
+
+  assert.equal(mensagemSemMatch.status, 403);
+
+  const inicioVinculada = new Date(Date.now() + 30 * 86400000);
+
   const comMatch = await api('/v1/appointments', {
     method: 'POST',
     token: startupToken,
     body: JSON.stringify({
       title: '[Smoke] Reunião vinculada',
       description: 'Teste de vínculo',
-      scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+      scheduledAt: inicioVinculada.toISOString(),
+      durationMinutes: 30,
       matchId,
     }),
   });
 
   assert.equal(comMatch.status, 201);
   assert.equal(comMatch.body.matchId, matchId);
+  assert.equal(comMatch.body.durationMinutes, 30);
+
+  const conflitoPreview = await api(
+    `/v1/appointments/conflicts?scheduledAt=${encodeURIComponent(inicioVinculada.toISOString())}` +
+      `&durationMinutes=30&matchId=${matchId}`,
+    { token: investor.body.token },
+  );
+
+  assert.equal(conflitoPreview.status, 200);
+  assert.equal(conflitoPreview.body.conflict, true);
+
+  const conflito = await api('/v1/appointments', {
+    method: 'POST',
+    token: investor.body.token,
+    body: JSON.stringify({
+      title: '[Smoke] Reunião sobreposta',
+      scheduledAt: new Date(inicioVinculada.getTime() + 15 * 60000).toISOString(),
+      durationMinutes: 30,
+      matchId,
+    }),
+  });
+
+  assert.equal(conflito.status, 409);
 
   const semMatch = await api('/v1/appointments', {
     method: 'POST',
@@ -174,6 +250,22 @@ async function main() {
   });
 
   assert.equal(privadaDoInvestidor.status, 404);
+
+  const cancelado = await api(`/v1/appointments/${comMatch.body.id}/status`, {
+    method: 'PUT',
+    token: startupToken,
+    body: JSON.stringify({ status: 'CANCELADO' }),
+  });
+
+  assert.equal(cancelado.status, 200);
+
+  const transicaoInvalida = await api(`/v1/appointments/${comMatch.body.id}/status`, {
+    method: 'PUT',
+    token: startupToken,
+    body: JSON.stringify({ status: 'CONCLUIDO' }),
+  });
+
+  assert.equal(transicaoInvalida.status, 400);
 
   const limparVinculada = await api(`/v1/appointments/${comMatch.body.id}`, {
     method: 'DELETE',

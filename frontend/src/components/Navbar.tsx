@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAgenda } from '../context/AgendaContext';
+import { useUnread } from '../context/UnreadContext';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import type { UserRole } from '../types';
@@ -15,6 +16,7 @@ const ROTULOS: Record<UserRole, string> = {
 export function Navbar() {
   const { user, logout, hasRole } = useAuth();
   const { open: abrirAgenda, upcomingCount } = useAgenda();
+  const { unreadCount } = useUnread();
   const temPerfil = hasRole('STARTUP', 'INVESTOR', 'MENTOR');
   const ehAdmin = hasRole('ADMIN');
 
@@ -48,6 +50,14 @@ export function Navbar() {
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} className={classeLink}>
               {link.label}
+              {link.to === '/mensagens' && unreadCount > 0 ? (
+                <span
+                  className="ml-1.5 inline-flex min-w-[17px] items-center justify-center rounded-full bg-barro-600 px-1 text-[10px] font-bold leading-[17px] text-white"
+                  title={`${unreadCount} mensagens não lidas`}
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>
@@ -85,6 +95,14 @@ export function Navbar() {
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} className={classeLink}>
               {link.label}
+              {link.to === '/mensagens' && unreadCount > 0 ? (
+                <span
+                  className="ml-1.5 inline-flex min-w-[17px] items-center justify-center rounded-full bg-barro-600 px-1 text-[10px] font-bold leading-[17px] text-white"
+                  title={`${unreadCount} mensagens não lidas`}
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>

@@ -115,36 +115,39 @@ docker-compose down -v            # derruba tudo e apaga o volume do banco
 
 Base: `http://localhost:5000/api` — versionada em `/v1`.
 
-| Método   | Rota                            | Descrição                                        | Auth               |
-| -------- | ------------------------------- | ------------------------------------------------ | ------------------ |
-| `GET`    | `/health`                       | Status da API e do banco                         | não                |
-| `POST`   | `/v1/auth/register`             | Cadastro de startup / investidor                 | não                |
-| `POST`   | `/v1/auth/login`                | Login (devolve o JWT)                            | não                |
-| `GET`    | `/v1/auth/me`                   | Perfil do usuário logado                         | sim                |
-| `POST`   | `/v1/startups`                  | Cadastro de startup                              | não                |
-| `GET`    | `/v1/startups`                  | Lista com filtros (`setor`, `estagio`, `cidade`) | não                |
-| `GET`    | `/v1/startups/:id`              | Detalhe de uma startup                           | não                |
-| `PUT`    | `/v1/startups/:id`              | Edita perfil                                     | dono ou admin      |
-| `DELETE` | `/v1/startups/:id`              | Remove perfil                                    | dono ou admin      |
-| `POST`   | `/v1/investors`                 | Cadastro de investidor anjo                      | não                |
-| `GET`    | `/v1/investors`                 | Lista com filtros (`setor`, `estado`)            | não                |
-| `GET`    | `/v1/investors/:id`             | Detalhe de um investidor                         | não                |
-| `PUT`    | `/v1/investors/:id`             | Edita perfil                                     | dono ou admin      |
-| `DELETE` | `/v1/investors/:id`             | Remove perfil                                    | dono ou admin      |
-| `GET`    | `/v1/matches`                   | Matches do usuário logado, com `score`           | sim                |
-| `GET`    | `/v1/matches/:id/compatibility` | Matriz de compatibilidade do match               | envolvido ou admin |
-| `POST`   | `/v1/matches/gerar`             | Recalcula os matches de uma startup              | sim                |
-| `PUT`    | `/v1/matches/:id/status`        | Aceita / recusa uma conexão                      | envolvido ou admin |
-| `GET`    | `/v1/messages`                  | Lista mensagens (com `conversaCom`)              | sim                |
-| `GET`    | `/v1/messages/conversas`        | Lista as conversas do usuário                    | sim                |
-| `POST`   | `/v1/messages`                  | Envia mensagem                                   | sim                |
-| `DELETE` | `/v1/messages/:id`              | Remove mensagem enviada                          | sim                |
-| `GET`    | `/v1/appointments`              | Lista agendamentos                               | sim                |
-| `POST`   | `/v1/appointments`              | Cria agendamento                                 | sim                |
-| `PUT`    | `/v1/appointments/:id/status`   | Conclui / cancela                                | sim                |
-| `DELETE` | `/v1/appointments/:id`          | Remove agendamento                               | sim                |
-| `GET`    | `/v1/audit`                     | Logs de auditoria                                | **admin**          |
-| `DELETE` | `/v1/audit/:id`                 | Remove um log                                    | **admin**          |
+| Método   | Rota                                  | Descrição                                                    | Auth               |
+| -------- | ------------------------------------- | ------------------------------------------------------------ | ------------------ |
+| `GET`    | `/health`                             | Status da API e do banco                                     | não                |
+| `POST`   | `/v1/auth/register`                   | Cadastro de startup / investidor                             | não                |
+| `POST`   | `/v1/auth/login`                      | Login (devolve o JWT)                                        | não                |
+| `GET`    | `/v1/auth/me`                         | Perfil do usuário logado                                     | sim                |
+| `POST`   | `/v1/startups`                        | Cadastro de startup                                          | não                |
+| `GET`    | `/v1/startups`                        | Lista com filtros (`setor`, `estagio`, `cidade`)             | não                |
+| `GET`    | `/v1/startups/:id`                    | Detalhe de uma startup                                       | não                |
+| `PUT`    | `/v1/startups/:id`                    | Edita perfil                                                 | dono ou admin      |
+| `DELETE` | `/v1/startups/:id`                    | Remove perfil                                                | dono ou admin      |
+| `POST`   | `/v1/investors`                       | Cadastro de investidor anjo                                  | não                |
+| `GET`    | `/v1/investors`                       | Lista com filtros (`setor`, `estado`)                        | não                |
+| `GET`    | `/v1/investors/:id`                   | Detalhe de um investidor                                     | não                |
+| `PUT`    | `/v1/investors/:id`                   | Edita perfil                                                 | dono ou admin      |
+| `DELETE` | `/v1/investors/:id`                   | Remove perfil                                                | dono ou admin      |
+| `GET`    | `/v1/matches`                         | Matches do usuário logado, com `score`                       | sim                |
+| `GET`    | `/v1/matches/:id/compatibility`       | Matriz de compatibilidade do match                           | envolvido ou admin |
+| `POST`   | `/v1/matches/gerar`                   | Recalcula os matches de uma startup                          | sim                |
+| `PUT`    | `/v1/matches/:id/status`              | Aceita / recusa uma conexão                                  | envolvido ou admin |
+| `GET`    | `/v1/messages`                        | Lista mensagens paginadas (`conversaCom`, `before`, `limit`) | sim                |
+| `GET`    | `/v1/messages/conversas`              | Lista as conversas com contexto do match                     | sim                |
+| `GET`    | `/v1/messages/nao-lidas`              | Conta mensagens não lidas                                    | sim                |
+| `POST`   | `/v1/messages/conversas/:userId/read` | Marca a conversa como lida                                   | sim                |
+| `POST`   | `/v1/messages`                        | Envia mensagem para uma conexão válida                       | sim                |
+| `DELETE` | `/v1/messages/:id`                    | Remove mensagem enviada                                      | sim                |
+| `GET`    | `/v1/appointments`                    | Lista agendamentos                                           | sim                |
+| `GET`    | `/v1/appointments/conflicts`          | Verifica conflito de horário                                 | sim                |
+| `POST`   | `/v1/appointments`                    | Cria agendamento com duração de 30 ou 60 min                 | sim                |
+| `PUT`    | `/v1/appointments/:id/status`         | Conclui / cancela com transições válidas                     | sim                |
+| `DELETE` | `/v1/appointments/:id`                | Remove agendamento                                           | sim                |
+| `GET`    | `/v1/audit`                           | Logs de auditoria                                            | **admin**          |
+| `DELETE` | `/v1/audit/:id`                       | Remove um log                                                | **admin**          |
 
 ### Exemplo de autenticação
 

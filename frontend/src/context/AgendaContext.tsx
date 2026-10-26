@@ -6,6 +6,7 @@ import { AgendaDrawer } from '../components/AgendaDrawer';
 
 interface AgendaOpenOptions {
   matchId?: string;
+  title?: string;
 }
 
 interface AgendaContextValue {
@@ -14,6 +15,7 @@ interface AgendaContextValue {
   isOpen: boolean;
   upcomingCount: number;
   presetMatchId?: string;
+  presetTitle?: string;
   refresh: () => Promise<void>;
 }
 
@@ -23,16 +25,19 @@ export function AgendaProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [presetMatchId, setPresetMatchId] = useState<string>();
+  const [presetTitle, setPresetTitle] = useState<string>();
   const [upcomingCount, setUpcomingCount] = useState(0);
 
   const open = useCallback((options?: AgendaOpenOptions) => {
     setPresetMatchId(options?.matchId);
+    setPresetTitle(options?.title);
     setIsOpen(true);
   }, []);
 
   const close = useCallback(() => {
     setIsOpen(false);
     setPresetMatchId(undefined);
+    setPresetTitle(undefined);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -66,8 +71,8 @@ export function AgendaProvider({ children }: { children: ReactNode }) {
   }, [user, refresh, close]);
 
   const valor = useMemo<AgendaContextValue>(
-    () => ({ open, close, isOpen, upcomingCount, presetMatchId, refresh }),
-    [open, close, isOpen, upcomingCount, presetMatchId, refresh],
+    () => ({ open, close, isOpen, upcomingCount, presetMatchId, presetTitle, refresh }),
+    [open, close, isOpen, upcomingCount, presetMatchId, presetTitle, refresh],
   );
 
   return (
@@ -76,6 +81,7 @@ export function AgendaProvider({ children }: { children: ReactNode }) {
       <AgendaDrawer
         open={isOpen}
         presetMatchId={presetMatchId}
+        presetTitle={presetTitle}
         onClose={close}
         onChanged={() => {
           void refresh();

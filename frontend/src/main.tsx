@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AgendaProvider } from './context/AgendaContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { UnreadProvider } from './context/UnreadContext';
 import App from './App';
 import './index.css';
 
@@ -12,9 +13,11 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AgendaProvider>
-            <App />
-          </AgendaProvider>
+          <UnreadProvider>
+            <AgendaProvider>
+              <App />
+            </AgendaProvider>
+          </UnreadProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

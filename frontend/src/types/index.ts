@@ -145,16 +145,46 @@ export interface Message {
   recipient: { id: string; name: string; email: string };
 }
 
+export interface MessagePage {
+  messages: Message[];
+  hasMore: boolean;
+}
+
+export interface ConversationMatch {
+  id: string;
+  status: MatchStatus;
+  score: number;
+  reason: string | null;
+}
+
+export interface ConversationSummary {
+  usuario: { id: string; name: string; email: string };
+  ultimaMensagem: Message;
+  naoLidas: number;
+  match: ConversationMatch | null;
+}
+
 export interface Appointment {
   id: string;
   title: string;
   description?: string | null;
   scheduledAt: string;
+  durationMinutes: number;
   status: AppointmentStatus;
   createdAt: string;
   matchId?: string | null;
   match?: Match | null;
   createdBy: { id: string; name: string; email: string };
+}
+
+export interface AppointmentConflictPreview {
+  conflict: boolean;
+  conflitos: {
+    id: string;
+    title: string;
+    scheduledAt: string;
+    durationMinutes: number;
+  }[];
 }
 
 export interface AuditLog {

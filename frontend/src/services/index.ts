@@ -2,11 +2,14 @@ import { api } from './api';
 import type {
   AdminOverview,
   Appointment,
+  AppointmentConflictPreview,
   AuditLog,
+  ConversationSummary,
   InvestorInsights,
   Match,
   MatchCompatibility,
   Message,
+  MessagePage,
   PrivacyOverview,
   PrivacyPolicy,
   Project,
@@ -128,15 +131,29 @@ export const matchService = {
 };
 
 export const messageService = {
-  async list(conversaCom?: string) {
-    const { data } = await api.get<Message[]>('/v1/messages', {
-      params: conversaCom ? { conversaCom } : undefined,
+  async list(conversaCom?: string, options?: { before?: string; limit?: number }) {
+    const { data } = await api.get<MessagePage>('/v1/messages', {
+      params: {
+        ...(conversaCom ? { conversaCom } : {}),
+        ...(options?.before ? { before: options.before } : {}),
+        ...(options?.limit ? { limit: options.limit } : {}),
+      },
     });
     return data;
   },
 
   async conversas() {
-    const { data } = await api.get('/v1/messages/conversas');
+    const { data } = await api.get<ConversationSummary[]>('/v1/messages/conversas');
+    return data;
+  },
+
+  async unreadCount() {
+    const { data } = await api.get<{ total: number }>('/v1/messages/nao-lidas');
+    return data;
+  },
+
+  async markRead(userId: string) {
+    const { data } = await api.post<{ updated: number }>(`/v1/messages/conversas/${userId}/read`);
     return data;
   },
 
@@ -156,8 +173,19 @@ export const appointmentService = {
     return data;
   },
 
-  async create(dados: { title: string; description?: string; scheduledAt: string; matchId?: string }) {
+  async create(dados: {
+    title: string;
+    description?: string;
+    scheduledAt: string;
+    durationMinutes: 30 | 60;
+    matchId?: string;
+  }) {
     const { data } = await api.post<Appointment>('/v1/appointments', dados);
+    return data;
+  },
+
+  async conflicts(params: { scheduledAt: string; durationMinutes: 30 | 60; matchId?: string }) {
+    const { data } = await api.get<AppointmentConflictPreview>('/v1/appointments/conflicts', { params });
     return data;
   },
 

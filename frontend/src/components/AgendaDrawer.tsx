@@ -4,14 +4,20 @@ import { AgendaPanel } from './AgendaPanel';
 interface AgendaDrawerProps {
   open: boolean;
   presetMatchId?: string;
+  presetTitle?: string;
   onClose: () => void;
   onChanged: () => void;
 }
 
-export function AgendaDrawer({ open, presetMatchId, onClose, onChanged }: AgendaDrawerProps) {
+export function AgendaDrawer({ open, presetMatchId, presetTitle, onClose, onChanged }: AgendaDrawerProps) {
   return (
     <Drawer open={open} onClose={onClose} title="Agenda">
-      <AgendaPanel presetMatchId={presetMatchId} onChanged={onChanged} idPrefix="agenda-drawer" />
+      <AgendaPanel
+        presetMatchId={presetMatchId}
+        presetTitle={presetTitle}
+        onChanged={onChanged}
+        idPrefix="agenda-drawer"
+      />
     </Drawer>
   );
 }
