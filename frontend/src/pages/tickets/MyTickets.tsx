@@ -94,6 +94,7 @@ export function MyTickets() {
       await Promise.all([carregar(), refreshUnread()]);
     } catch (e) {
       setErroDetalhe(extractErrorMessage(e));
+      throw e;
     } finally {
       setEnviando(false);
     }

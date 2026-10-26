@@ -33,8 +33,12 @@ export function TicketConversation({
       return;
     }
 
-    await onSend(texto.trim());
-    setTexto('');
+    try {
+      await onSend(texto.trim());
+      setTexto('');
+    } catch {
+      // o erro e exibido pelo componente pai; o texto permanece para nova tentativa
+    }
   }
 
   return (

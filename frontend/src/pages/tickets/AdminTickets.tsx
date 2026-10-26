@@ -181,6 +181,7 @@ export function AdminTickets() {
       await carregar();
     } catch (e) {
       setErroDetalhe(extractErrorMessage(e));
+      throw e;
     } finally {
       setEnviando(false);
     }
