@@ -174,7 +174,8 @@ export function AdminDashboard() {
               conexões movimentando a rede.
             </p>
             <p className="mt-2 text-xs text-areia-200/60">
-              {overview.totals.projects} projetos publicados · {overview.totals.mentors} mentores
+              {overview.totals.projects} projetos publicados · {overview.totals.mentors}{' '}
+              {overview.totals.mentors === 1 ? 'mentor' : 'mentores'}
             </p>
           </div>
 
