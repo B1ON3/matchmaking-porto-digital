@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
 import { HttpError } from '../utils/http-error';
+import { EncryptionError } from '../services/encryption.service';
 
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({
@@ -25,6 +26,15 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
         campo: issue.path.join('.'),
         mensagem: issue.message,
       })),
+    });
+  }
+
+  // keyring ausente/invalido e configuracao, nao erro do cliente nem bug de codigo:
+  // responde 503 com um codigo proprio em vez de derrubar a funcao inteira
+  if (err instanceof EncryptionError) {
+    return res.status(503).json({
+      error: 'A criptografia do servidor nao esta configurada. Fale com a administracao.',
+      codigo: 'CRIPTOGRAFIA_INDISPONIVEL',
     });
   }
 

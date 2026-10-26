@@ -21,6 +21,11 @@ export interface EncryptionMetadata {
   kids: string[];
 }
 
+// status publico (sem segredos) para o /health e para o boot: na Vercel os logs
+// da funcao nao ficam acessiveis, entao a propria API informa o que falta
+export type StatusDoKeyring =
+  { configurada: true; kidAtivo: string; kids: number } | { configurada: false; variavel: string };
+
 export interface EncryptIfNeededResult {
   value: string;
   changed: boolean;
@@ -251,6 +256,21 @@ export function getTextEncryptor(): TextEncryptor {
 
 export function validateEncryptionConfig(): EncryptionMetadata {
   return getTextEncryptor().metadata();
+}
+
+const VARIAVEL_FALTANDO = /([A-Z][A-Z0-9_]{3,}) n[aã]o configurad/i;
+
+export function statusDoKeyring(): StatusDoKeyring {
+  try {
+    const metadata = validateEncryptionConfig();
+
+    return { configurada: true, kidAtivo: metadata.activeKid, kids: metadata.kids.length };
+  } catch (erro) {
+    const mensagem = erro instanceof Error ? erro.message : '';
+    const variavel = VARIAVEL_FALTANDO.exec(mensagem)?.[1] ?? 'DATA_ENCRYPTION_KEYS';
+
+    return { configurada: false, variavel };
+  }
 }
 
 export function encryptText(value: string): string {

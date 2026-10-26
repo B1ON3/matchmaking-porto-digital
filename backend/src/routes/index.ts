@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 import { prisma } from '../config/prisma';
+import { statusDoKeyring } from '../services/encryption.service';
 import { authRoutes } from './auth.routes';
 import { startupRoutes } from './startups.routes';
 import { investorRoutes } from './investors.routes';
@@ -55,6 +56,7 @@ routes.get('/health', async (_req: Request, res: Response) => {
     servico: 'laco-api',
     version: '0.1.0',
     banco: database,
+    criptografia: statusDoKeyring(),
     timestamp: new Date().toISOString(),
   });
 });
