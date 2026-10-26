@@ -26,6 +26,7 @@ interface ProfileModalProps {
   initialTab?: ProfileModalAba;
   hideActions?: boolean;
   onStatusChange?: (status: 'ACEITO' | 'RECUSADO') => Promise<void>;
+  onCompare?: () => void;
 }
 
 const STATUS: Record<MatchStatus, { label: string; classe: string }> = {
@@ -156,6 +157,7 @@ export function ProfileModal({
   initialTab,
   hideActions = false,
   onStatusChange,
+  onCompare,
 }: ProfileModalProps) {
   const navigate = useNavigate();
   const { open: abrirAgenda } = useAgenda();
@@ -272,6 +274,11 @@ export function ProfileModal({
 
   const rodape = (
     <div className="flex flex-wrap items-center justify-end gap-2">
+      {onCompare && matchId ? (
+        <button type="button" className="btn-secondary" onClick={onCompare}>
+          Comparar perfis
+        </button>
+      ) : null}
       <button type="button" className="btn-secondary" onClick={conversar} disabled={!usuario}>
         Conversar
       </button>

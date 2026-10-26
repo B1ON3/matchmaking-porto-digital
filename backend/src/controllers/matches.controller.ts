@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
+import { obterCompatibilidade } from '../services/compatibility.service';
 import { gerarMatchesDaStartup } from '../services/matching.service';
 import { HttpError } from '../utils/http-error';
 
@@ -94,6 +95,14 @@ export async function list(req: Request, res: Response) {
   const total = await prisma.match.count({ where: { score: { gte: minimo } } });
 
   return res.json({ total, pagina, porPagina, perfil: 'admin', matches });
+}
+
+// GET /api/matches/:id/compatibility
+export async function compatibility(req: Request, res: Response) {
+  const { id } = z.object({ id: z.string().uuid() }).parse(req.params);
+  const matriz = await obterCompatibilidade(id, req.user!);
+
+  res.json(matriz);
 }
 
 // GET /api/matches/:id

@@ -5,6 +5,7 @@ import type {
   AuditLog,
   InvestorInsights,
   Match,
+  MatchCompatibility,
   Message,
   PrivacyOverview,
   PrivacyPolicy,
@@ -113,6 +114,11 @@ export const matchService = {
   async regenerate(startupId: string) {
     const { data } = await api.post('/v1/matches/gerar', { startupId });
     return data as { mensagem: string; quantidade: number };
+  },
+
+  async compatibility(id: string) {
+    const { data } = await api.get<MatchCompatibility>(`/v1/matches/${id}/compatibility`);
+    return data;
   },
 
   async updateStatus(id: string, status: 'ACEITO' | 'RECUSADO' | 'PENDENTE') {

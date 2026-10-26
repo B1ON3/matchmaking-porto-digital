@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Alert } from '../components/Alert';
 import { Avatar } from '../components/Avatar';
+import { CompatibilityDrawer } from '../components/CompatibilityDrawer';
 import { ProfileModal } from '../components/ProfileModal';
 import { ProgressRing } from '../components/ProgressRing';
 import { Skeleton } from '../components/Skeleton';
@@ -141,6 +142,7 @@ export function Connections() {
   const [recalculando, setRecalculando] = useState(false);
   const [processandoId, setProcessandoId] = useState<string | null>(null);
   const [selecionado, setSelecionado] = useState<PerfilSelecionado | null>(null);
+  const [comparando, setComparando] = useState<Match | null>(null);
 
   const ehStaff = Boolean(user && !isStartup && !isInvestor);
 
@@ -468,6 +470,9 @@ export function Connections() {
                     <BadgeStatus status={match.status} />
 
                     <div className="flex flex-wrap gap-2">
+                      <button type="button" className="btn-secondary" onClick={() => setComparando(match)}>
+                        Comparar perfis
+                      </button>
                       {startupId ? (
                         <button
                           type="button"
@@ -582,6 +587,9 @@ export function Connections() {
                         Ver briefing
                       </button>
                     ) : null}
+                    <button type="button" className="btn-secondary" onClick={() => setComparando(match)}>
+                      Comparar perfis
+                    </button>
                     {podeAceitar ? (
                       <button
                         type="button"
@@ -609,6 +617,38 @@ export function Connections() {
         matchStatus={selecionado?.matchStatus}
         score={selecionado?.score}
         onStatusChange={atualizarSelecionado}
+        onCompare={() => {
+          if (!selecionado) {
+            return;
+          }
+
+          const match = matches.find((item) => item.id === selecionado.matchId);
+
+          if (match) {
+            setComparando(match);
+            setSelecionado(null);
+          }
+        }}
+      />
+
+      <CompatibilityDrawer
+        open={Boolean(comparando)}
+        matchId={comparando?.id ?? ''}
+        onClose={() => setComparando(null)}
+        onOpenBriefing={(kind, profileId) => {
+          if (!comparando) {
+            return;
+          }
+
+          setSelecionado({
+            kind,
+            profileId,
+            matchId: comparando.id,
+            matchStatus: comparando.status,
+            score: comparando.score,
+          });
+          setComparando(null);
+        }}
       />
     </div>
   );

@@ -107,6 +107,35 @@ async function main() {
   assert.ok(matchDaStartupComInvestidor, 'startup deve ter um match com o investidor do smoke');
   const matchId = matchDaStartupComInvestidor.id;
 
+  const compatibilidade = await api(`/v1/matches/${matchId}/compatibility`, { token: startupToken });
+
+  assert.equal(compatibilidade.status, 200);
+  assert.equal(compatibilidade.body.matchId, matchId);
+  assert.equal(compatibilidade.body.dimensions.length, 4);
+  assert.equal(
+    compatibilidade.body.dimensions.reduce((soma: number, dimensao: { points: number }) => soma + dimensao.points, 0),
+    compatibilidade.body.score,
+    'a soma da matriz deve bater com o score do match',
+  );
+  assert.ok(compatibilidade.body.startup.name);
+  assert.ok(compatibilidade.body.investor.name);
+
+  const compatibilidadeInvestidor = await api(`/v1/matches/${matchId}/compatibility`, {
+    token: investor.body.token,
+  });
+
+  assert.equal(compatibilidadeInvestidor.status, 200);
+
+  const mentor = await api('/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'mentor@porto.digital', password: 'senha123' }),
+  });
+  const compatibilidadeNegada = await api(`/v1/matches/${matchId}/compatibility`, {
+    token: mentor.body.token,
+  });
+
+  assert.equal(compatibilidadeNegada.status, 403);
+
   const comMatch = await api('/v1/appointments', {
     method: 'POST',
     token: startupToken,
@@ -162,6 +191,12 @@ async function main() {
     method: 'POST',
     body: JSON.stringify({ email: 'admin@porto.digital', password: 'senha123' }),
   });
+  const compatibilidadeAdmin = await api(`/v1/matches/${matchId}/compatibility`, {
+    token: admin.body.token,
+  });
+
+  assert.equal(compatibilidadeAdmin.status, 200);
+
   const overview = await api('/v1/admin/overview', { token: admin.body.token });
 
   assert.equal(overview.status, 200);

@@ -8,9 +8,18 @@ interface DrawerProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  size?: DrawerSize;
 }
 
-export function Drawer({ open, onClose, title, children, footer }: DrawerProps) {
+type DrawerSize = 'md' | 'lg' | 'xl';
+
+const TAMANHOS: Record<DrawerSize, string> = {
+  md: 'max-w-md',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+};
+
+export function Drawer({ open, onClose, title, children, footer, size = 'md' }: DrawerProps) {
   const tituloId = useId();
   const painelRef = useDialogBehavior(open, onClose);
 
@@ -33,7 +42,7 @@ export function Drawer({ open, onClose, title, children, footer }: DrawerProps) 
         aria-modal="true"
         aria-labelledby={tituloId}
         tabIndex={-1}
-        className="fixed inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-laco outline-none dark:bg-noite-850"
+        className={`fixed inset-y-0 right-0 flex w-full ${TAMANHOS[size]} flex-col bg-white shadow-laco outline-none dark:bg-noite-850`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-4 dark:border-noite-700">
           <h2 id={tituloId} className="font-display text-xl font-semibold text-slate-900 dark:text-areia-100">

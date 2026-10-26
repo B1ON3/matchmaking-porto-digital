@@ -29,6 +29,46 @@ export interface MatchDetails {
   regiao: number;
 }
 
+export type CompatibilityStatus = 'ATENDE' | 'PARCIAL' | 'NAO_ATENDE';
+
+export type CompatibilityDimensionKey = keyof MatchDetails;
+
+export interface CompatibilityDimension {
+  key: CompatibilityDimensionKey;
+  label: string;
+  weight: number;
+  points: number;
+  status: CompatibilityStatus;
+  evidence: string;
+}
+
+export interface CompatibilityParty {
+  id: string;
+  name: string;
+  contactName: string;
+  sector: string;
+  stage: string;
+  city: string;
+  state: string;
+  description?: string | null;
+  logoUrl?: string | null;
+  ticketMin?: number | null;
+  ticketMax?: number | null;
+}
+
+export interface MatchCompatibility {
+  matchId: string;
+  score: number;
+  reason: string;
+  dimensions: CompatibilityDimension[];
+  summary: {
+    strengths: string[];
+    attention: string[];
+  };
+  startup: CompatibilityParty;
+  investor: CompatibilityParty;
+}
+
 export interface PublicUser {
   id: string;
   name: string;
