@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { prisma } from '../config/prisma';
+import { encryptText } from '../services/encryption.service';
 
 interface AuditOptions {
   action: string;
@@ -17,9 +18,10 @@ export function auditLog(options: AuditOptions) {
 
       const detalhes = {
         metodo: req.method,
-        rota: req.originalUrl,
+        rota: req.originalUrl.split('?')[0],
         status: res.statusCode,
       };
+      const userAgent = req.headers['user-agent'];
 
       void prisma.auditLog
         .create({
@@ -27,9 +29,9 @@ export function auditLog(options: AuditOptions) {
             action: options.action,
             entity: options.entity,
             entityId: options.getEntityId?.(req, res),
-            details: JSON.stringify(detalhes),
-            ip: req.ip,
-            userAgent: req.headers['user-agent'],
+            details: encryptText(JSON.stringify(detalhes)),
+            ip: req.ip ? encryptText(req.ip) : null,
+            userAgent: userAgent ? encryptText(userAgent) : null,
             userId: req.user?.id,
           },
         })

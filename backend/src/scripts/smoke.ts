@@ -100,7 +100,12 @@ async function main() {
   assert.equal(removido.status, 204);
 
   const matchesDaStartup = await api('/v1/matches?minimo=0&porPagina=50', { token: startupToken });
-  const matchId = matchesDaStartup.body.matches[0].id;
+  const matchDaStartupComInvestidor = matchesDaStartup.body.matches.find(
+    (match: { investor: { user: { id: string } } }) => match.investor.user.id === investor.body.user.id,
+  );
+
+  assert.ok(matchDaStartupComInvestidor, 'startup deve ter um match com o investidor do smoke');
+  const matchId = matchDaStartupComInvestidor.id;
 
   const comMatch = await api('/v1/appointments', {
     method: 'POST',

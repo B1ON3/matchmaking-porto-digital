@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
+import { decryptText, encryptText } from '../services/encryption.service';
 import { HttpError } from '../utils/http-error';
 
 const createSchema = z.object({
@@ -27,7 +28,7 @@ export async function create(req: Request, res: Response) {
 
   const mensagem = await prisma.message.create({
     data: {
-      content,
+      content: encryptText(content),
       senderId: req.user!.id,
       recipientId,
     },
@@ -37,7 +38,7 @@ export async function create(req: Request, res: Response) {
     },
   });
 
-  res.status(201).json(mensagem);
+  res.status(201).json({ ...mensagem, content: decryptText(mensagem.content) });
 }
 
 // GET /api/messages?conversaCom=<userId>
@@ -75,20 +76,22 @@ export async function list(req: Request, res: Response) {
     });
   }
 
-  res.json(mensagens);
+  res.json(mensagens.map((mensagem) => ({ ...mensagem, content: decryptText(mensagem.content) })));
 }
 
 // GET /api/messages/conversas
 export async function conversas(req: Request, res: Response) {
-  const mensagens = await prisma.message.findMany({
-    where: { OR: [{ senderId: req.user!.id }, { recipientId: req.user!.id }] },
-    include: {
-      sender: { select: { id: true, name: true, email: true } },
-      recipient: { select: { id: true, name: true, email: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 500,
-  });
+  const mensagens = (
+    await prisma.message.findMany({
+      where: { OR: [{ senderId: req.user!.id }, { recipientId: req.user!.id }] },
+      include: {
+        sender: { select: { id: true, name: true, email: true } },
+        recipient: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+    })
+  ).map((mensagem) => ({ ...mensagem, content: decryptText(mensagem.content) }));
 
   const mapa = new Map<
     string,

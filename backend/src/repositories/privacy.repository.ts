@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma';
+import { encryptText } from '../services/encryption.service';
 import type { RequestContext } from '../utils/request-context';
 
 const exportSelect = {
@@ -166,14 +167,16 @@ export async function anonymizeAccount({ userId, passwordHash, context }: Anonym
         action: 'PRIVACIDADE_EXCLUSAO',
         entity: 'User',
         entityId: null,
-        details: JSON.stringify({
-          mensagensRemovidas: messages.count,
-          reunioesRemovidas: appointments.count,
-          perfisRemovidos: startups.count + investors.count,
-          matchesDesvinculados: matchIds.length,
-        }),
-        ip: context.ip,
-        userAgent: context.userAgent,
+        details: encryptText(
+          JSON.stringify({
+            mensagensRemovidas: messages.count,
+            reunioesRemovidas: appointments.count,
+            perfisRemovidos: startups.count + investors.count,
+            matchesDesvinculados: matchIds.length,
+          }),
+        ),
+        ip: context.ip ? encryptText(context.ip) : null,
+        userAgent: context.userAgent ? encryptText(context.userAgent) : null,
         userId: null,
       },
     });

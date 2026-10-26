@@ -19,4 +19,6 @@ export const env = {
   jwtExpiresIn: required('JWT_EXPIRES_IN', '1d'),
   passwordResetExpiresMinutes: Number(required('PASSWORD_RESET_EXPIRES_MINUTES', '30')),
   corsOrigin: required('CORS_ORIGIN', 'http://localhost:3000,https://matchmaking-frontend-ochre.vercel.app'),
+  encryptionKeys: process.env.DATA_ENCRYPTION_KEYS ?? '',
+  encryptionActiveKid: process.env.DATA_ENCRYPTION_ACTIVE_KID ?? '',
 };

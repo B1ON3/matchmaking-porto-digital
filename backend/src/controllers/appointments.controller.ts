@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { AppointmentStatus, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
+import { decryptText, encryptText } from '../services/encryption.service';
 import { HttpError } from '../utils/http-error';
 
 const createSchema = z.object({
@@ -23,6 +24,13 @@ const appointmentInclude = {
 } satisfies Prisma.AppointmentInclude;
 
 type Usuario = { id: string; role: UserRole };
+
+function decifrarDescricao<T extends { description: string | null }>(agendamento: T): T {
+  return {
+    ...agendamento,
+    description: agendamento.description ? decryptText(agendamento.description) : null,
+  };
+}
 
 function escopoDoUsuario(usuario: Usuario): Prisma.AppointmentWhereInput {
   if (usuario.role === UserRole.ADMIN) {
@@ -89,12 +97,13 @@ export async function create(req: Request, res: Response) {
   const agendamento = await prisma.appointment.create({
     data: {
       ...dados,
+      description: dados.description ? encryptText(dados.description) : undefined,
       createdById: req.user!.id,
     },
     include: appointmentInclude,
   });
 
-  res.status(201).json(agendamento);
+  res.status(201).json(decifrarDescricao(agendamento));
 }
 
 // GET /api/appointments
@@ -119,7 +128,7 @@ export async function list(req: Request, res: Response) {
     orderBy: { scheduledAt: 'asc' },
   });
 
-  res.json(agendamentos);
+  res.json(agendamentos.map(decifrarDescricao));
 }
 
 // GET /api/appointments/:id
@@ -135,7 +144,7 @@ export async function show(req: Request, res: Response) {
     throw HttpError.notFound('agendamento nao encontrado');
   }
 
-  res.json(agendamento);
+  res.json(decifrarDescricao(agendamento));
 }
 
 // PUT /api/appointments/:id/status
@@ -165,7 +174,7 @@ export async function updateStatus(req: Request, res: Response) {
     include: appointmentInclude,
   });
 
-  res.json(atualizado);
+  res.json(decifrarDescricao(atualizado));
 }
 
 // DELETE /api/appointments/:id

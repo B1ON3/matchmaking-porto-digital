@@ -67,6 +67,9 @@ cd matchmaking-porto-digital
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
+# 2.1 gerar a chave AES-256 local e colar em DATA_ENCRYPTION_KEYS no backend/.env
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
 # 3. subir todo o ambiente conteinerizado
 docker-compose up --build -d
 ```
@@ -85,6 +88,9 @@ docker-compose exec backend npx prisma migrate dev
 
 # popular com um startup, um investidor e um match de exemplo
 docker-compose exec backend npm run prisma:seed
+
+# migrar registros legados para o formato cifrado (idempotente)
+docker-compose exec backend npm run backfill:encryption
 ```
 
 ### Contas de exemplo (após o seed)
@@ -238,7 +244,11 @@ Environment Variables (Production e Preview):
 | `JWT_EXPIRES_IN`                 | `1d`                                                                                                                   |
 | `PASSWORD_RESET_EXPIRES_MINUTES` | `30`                                                                                                                   |
 | `CORS_ORIGIN`                    | `https://matchmaking-frontend-ochre.vercel.app,https://matchmaking-frontend-*.vercel.app`                              |
+| `DATA_ENCRYPTION_KEYS`           | keyring JSON `{"<kid>":"<chave base64 de 32 bytes>"}` com todas as chaves ainda necessárias para leitura               |
+| `DATA_ENCRYPTION_ACTIVE_KID`     | kid usado nas novas gravações (ex.: `prod-2026-10`)                                                                    |
 | `NODE_ENV`                       | `production`                                                                                                           |
+
+> No Supabase, use `sslmode=require` na conexão do runtime. O pooler (`:6543`) é indicado para a API; migrações usam a porta direta `:5432`.
 
 Migrations devem rodar com a conexão direta do Supabase (porta `5432`), não com o pooler:
 
@@ -272,3 +282,40 @@ O valor é embutido no bundle durante o build: ao trocar a URL da API, faça um 
 - [ ] `GET https://<backend>.vercel.app/api/health` responde `banco: online`
 - [ ] O front publicado chama a API sem erro de CORS (aba Network)
 - [ ] Preview deployments também funcionam
+
+## 10. Criptografia em repouso e rotação de chaves
+
+Mensagens, descrições de reunião e IP/user-agent de auditoria são gravados com
+**AES-256-GCM**. O formato versionado `enc:v1:<kid>:<iv>:<tag>:<ciphertext>`
+permite ler registros antigos durante a rotação. Texto legado sem o prefixo
+continua legível até ser migrado pelo backfill.
+
+```bash
+# gerar uma chave AES-256 (32 bytes em base64)
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+# simular a migração, sem gravar
+docker-compose exec backend npm run backfill:encryption -- --dry-run
+
+# migrar registros em texto claro
+docker-compose exec backend npm run backfill:encryption
+```
+
+O comando é idempotente: registros já cifrados com o `kid` ativo são ignorados.
+Para rotacionar:
+
+1. Gere uma nova chave e adicione-a ao JSON de `DATA_ENCRYPTION_KEYS`, mantendo
+   a chave antiga no keyring.
+2. Troque `DATA_ENCRYPTION_ACTIVE_KID` para o novo `kid` e faça o deploy.
+3. Rode `npm run backfill:encryption -- --rewrap` para recifrar os registros
+   antigos com a chave ativa.
+4. Confirme que o modo `--dry-run --rewrap` retorna `total: 0`.
+5. Após a janela de segurança e o fim dos backups antigos, remova a chave
+   anterior do keyring.
+
+**Limitação:** sem nenhuma chave válida do keyring, o conteúdo restrito é
+irrecuperável. Guarde as chaves em um cofre de segredos e nunca as commite.
+Em produção, a API não inicia se `DATA_ENCRYPTION_KEYS` ou
+`DATA_ENCRYPTION_ACTIVE_KID` estiverem ausentes ou inválidos. O Helmet aplica
+HSTS em produção, o CORS é restrito por origem e os logs HTTP registram apenas
+método, caminho sem query string, status e tempo de resposta.

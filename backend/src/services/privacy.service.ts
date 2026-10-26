@@ -15,6 +15,7 @@ import {
 import { comparePassword, hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
 import type { RequestContext } from '../utils/request-context';
+import { decryptText } from './encryption.service';
 import {
   montarConsentimentosObrigatorios,
   podeRevogar,
@@ -153,6 +154,22 @@ export async function exportarDados(userId: string) {
 
   const policy = getPrivacyPolicy();
 
+  const titular = {
+    ...dados,
+    sentMessages: dados.sentMessages.map((mensagem) => ({
+      ...mensagem,
+      content: decryptText(mensagem.content),
+    })),
+    receivedMessages: dados.receivedMessages.map((mensagem) => ({
+      ...mensagem,
+      content: decryptText(mensagem.content),
+    })),
+    appointmentsMade: dados.appointmentsMade.map((agendamento) => ({
+      ...agendamento,
+      description: agendamento.description ? decryptText(agendamento.description) : null,
+    })),
+  };
+
   return {
     documento: 'portabilidade-lgpd',
     geradoEm: new Date().toISOString(),
@@ -161,7 +178,7 @@ export async function exportarDados(userId: string) {
       hash: policy.hash,
       effectiveAt: policy.effectiveAt,
     },
-    titular: dados,
+    titular,
     consentimentosAtuais: resumoConsentimentos(registros),
   };
 }

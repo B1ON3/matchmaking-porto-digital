@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
+import { decryptText } from '../services/encryption.service';
 import { HttpError } from '../utils/http-error';
 
 const querySchema = z.object({
@@ -9,6 +10,15 @@ const querySchema = z.object({
   pagina: z.coerce.number().int().positive().default(1),
   porPagina: z.coerce.number().int().positive().max(100).default(50),
 });
+
+function decifrarLog<T extends { details: string | null; ip: string | null; userAgent: string | null }>(log: T): T {
+  return {
+    ...log,
+    details: log.details ? decryptText(log.details) : null,
+    ip: log.ip ? decryptText(log.ip) : null,
+    userAgent: log.userAgent ? decryptText(log.userAgent) : null,
+  };
+}
 
 // GET /api/audit  (RF08 / RNF10) - somente admin
 export async function list(req: Request, res: Response) {
@@ -27,7 +37,7 @@ export async function list(req: Request, res: Response) {
 
   const total = await prisma.auditLog.count();
 
-  res.json({ total, pagina, porPagina, logs });
+  res.json({ total, pagina, porPagina, logs: logs.map(decifrarLog) });
 }
 
 // GET /api/audit/:id
@@ -43,7 +53,7 @@ export async function show(req: Request, res: Response) {
     throw HttpError.notFound('log nao encontrado');
   }
 
-  res.json(log);
+  res.json(decifrarLog(log));
 }
 
 // DELETE /api/audit/:id  (so admin pode limpar um registro)

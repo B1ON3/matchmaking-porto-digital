@@ -11,6 +11,7 @@ import {
 } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { getPrivacyPolicy } from '../src/content/privacy-policy';
+import { backfillEncryption } from '../src/services/encryption-backfill.service';
 import { calculaScore } from '../src/services/matching.rules';
 
 const prisma = new PrismaClient();
@@ -926,7 +927,13 @@ async function main() {
 
   await seedAuditLogs(userIds, matchByPair, admin.id, mentor.id);
 
+  const encryption = await backfillEncryption(prisma);
+
   console.log('dados de exemplo criados');
+  console.log(
+    `criptografia aplicada: ${encryption.messages.migrated} mensagens, ` +
+      `${encryption.appointments.migrated} reuniões e ${encryption.auditLogs.migrated} logs migrados`,
+  );
   console.log(`${startups.length} startups, ${investors.length} investidores, 1 mentor e 1 admin`);
   console.log(`${projects.length} projetos, ${matches.length} matches, ${messages.length} mensagens`);
   console.log(`${appointments.length} agendamentos e ${auditLogs.length} registros de auditoria`);
