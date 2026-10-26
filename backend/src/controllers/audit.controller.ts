@@ -24,18 +24,20 @@ function decifrarLog<T extends { details: string | null; ip: string | null; user
 export async function list(req: Request, res: Response) {
   const { entidade, acao, pagina, porPagina } = querySchema.parse(req.query);
 
+  const where = {
+    ...(entidade ? { entity: entidade } : {}),
+    ...(acao ? { action: { contains: acao, mode: 'insensitive' as const } } : {}),
+  };
+
   const logs = await prisma.auditLog.findMany({
-    where: {
-      ...(entidade ? { entity: entidade } : {}),
-      ...(acao ? { action: { contains: acao, mode: 'insensitive' } } : {}),
-    },
+    where,
     include: { user: { select: { id: true, name: true, email: true, role: true } } },
     orderBy: { createdAt: 'desc' },
     skip: (pagina - 1) * porPagina,
     take: porPagina,
   });
 
-  const total = await prisma.auditLog.count();
+  const total = await prisma.auditLog.count({ where });
 
   res.json({ total, pagina, porPagina, logs: logs.map(decifrarLog) });
 }

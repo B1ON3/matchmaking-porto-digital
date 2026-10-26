@@ -74,6 +74,7 @@ export async function list(req: Request, res: Response) {
   const { setor, estagio, cidade, pagina, porPagina } = filtros;
 
   const where = {
+    hiddenAt: null,
     ...(setor ? { sector: { contains: setor, mode: 'insensitive' as const } } : {}),
     ...(estagio ? { stage: { contains: estagio, mode: 'insensitive' as const } } : {}),
     ...(cidade ? { city: { contains: cidade, mode: 'insensitive' as const } } : {}),

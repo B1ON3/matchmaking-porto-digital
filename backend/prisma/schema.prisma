@@ -32,6 +32,7 @@ model User {
   passwordResets   PasswordResetToken[]
 
   @@index([status])
+  @@index([lastLoginAt])
   @@map("users")
 }
 
@@ -81,6 +82,7 @@ model StartupProfile {
   needs       String?
   pitchUrl    String?
   logoUrl     String?
+  hiddenAt    DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   matches     Match[]
@@ -89,6 +91,7 @@ model StartupProfile {
 
   @@index([sector])
   @@index([stage])
+  @@index([hiddenAt])
   @@map("startups")
 }
 
@@ -117,12 +120,14 @@ model InvestorProfile {
   city           String?
   state          String   @default("PE")
   bio            String?
+  hiddenAt       DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   matches        Match[]
 
   @@index([state])
+  @@index([hiddenAt])
   @@map("investors")
 }
 

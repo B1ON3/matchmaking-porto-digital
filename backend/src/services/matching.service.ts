@@ -24,8 +24,12 @@ export async function gerarMatchesDaStartup(startupId: string): Promise<Match[]>
     return [];
   }
 
+  if (startup.hiddenAt) {
+    return [];
+  }
+
   const [investors, existentes] = await Promise.all([
-    prisma.investorProfile.findMany(),
+    prisma.investorProfile.findMany({ where: { hiddenAt: null } }),
     prisma.match.findMany({
       where: { startupId },
       select: { investorId: true, score: true, reason: true },

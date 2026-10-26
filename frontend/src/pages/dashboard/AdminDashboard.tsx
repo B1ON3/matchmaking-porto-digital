@@ -180,7 +180,7 @@ export function AdminDashboard() {
           </div>
 
           <Link to="/moderacao" className="btn-primary shrink-0">
-            Abrir moderação
+            Abrir Sala de Controle
           </Link>
         </div>
       </section>
@@ -319,7 +319,7 @@ export function AdminDashboard() {
             description="As ações mais recentes registradas na plataforma."
             action={
               <Link to="/moderacao" className="link">
-                Abrir moderação
+                Abrir Sala de Controle
               </Link>
             }
           />

@@ -16,6 +16,22 @@ async function api<T = any>(path: string, options: RequestInit & { token?: strin
   return { status: response.status, body };
 }
 
+async function apiText(path: string, token: string) {
+  const response = await fetch(`${BASE}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const body = new TextDecoder('utf-8').decode(bytes);
+
+  return {
+    status: response.status,
+    contentType: response.headers.get('content-type') ?? '',
+    disposicao: response.headers.get('content-disposition') ?? '',
+    bom: bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf,
+    body,
+  };
+}
+
 async function main() {
   const startup = await api('/v1/auth/login', {
     method: 'POST',
@@ -295,6 +311,152 @@ async function main() {
   assert.equal(typeof overview.body.totals.startups, 'number');
   assert.ok(Array.isArray(overview.body.sectors));
   assert.ok(Array.isArray(overview.body.topMatches));
+
+  const pessoas = await api('/v1/admin/users?busca=mentor&porPagina=10', {
+    token: admin.body.token,
+  });
+
+  assert.equal(pessoas.status, 200);
+  assert.ok(
+    pessoas.body.users.some((usuario: { id: string }) => usuario.id === mentor.body.user.id),
+    'busca de pessoas deve encontrar o mentor',
+  );
+
+  const semMotivo = await api(`/v1/admin/users/${mentor.body.user.id}/status`, {
+    method: 'PATCH',
+    token: admin.body.token,
+    body: JSON.stringify({ status: 'SUSPENSO' }),
+  });
+
+  assert.equal(semMotivo.status, 400, 'suspensao sem motivo deve ser recusada');
+
+  const autoSuspensao = await api(`/v1/admin/users/${admin.body.user.id}/status`, {
+    method: 'PATCH',
+    token: admin.body.token,
+    body: JSON.stringify({ status: 'SUSPENSO', motivo: '[Smoke] tentativa invalida' }),
+  });
+
+  assert.equal(autoSuspensao.status, 400, 'admin nao pode suspender a si mesmo');
+
+  let mentorSuspenso = false;
+
+  try {
+    const suspensao = await api(`/v1/admin/users/${mentor.body.user.id}/status`, {
+      method: 'PATCH',
+      token: admin.body.token,
+      body: JSON.stringify({ status: 'SUSPENSO', motivo: '[Smoke] validar bloqueio de acesso' }),
+    });
+
+    assert.equal(suspensao.status, 200);
+    assert.equal(suspensao.body.status, 'SUSPENSO');
+    assert.equal(suspensao.body.moderationReason, '[Smoke] validar bloqueio de acesso');
+    mentorSuspenso = true;
+
+    const loginSuspenso = await api('/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'mentor@porto.digital', password: 'senha123' }),
+    });
+
+    assert.equal(loginSuspenso.status, 403, 'conta suspensa nao pode autenticar');
+
+    const rotaSuspensa = await api('/v1/auth/me', { token: mentor.body.token });
+    assert.equal(rotaSuspensa.status, 403, 'token antigo de conta suspensa deve ser bloqueado');
+  } finally {
+    if (mentorSuspenso) {
+      const reativacao = await api(`/v1/admin/users/${mentor.body.user.id}/status`, {
+        method: 'PATCH',
+        token: admin.body.token,
+        body: JSON.stringify({ status: 'ATIVO', motivo: '[Smoke] reativar apos teste' }),
+      });
+
+      assert.equal(reativacao.status, 200);
+      assert.equal(reativacao.body.status, 'ATIVO');
+    }
+  }
+
+  const loginReativado = await api('/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'mentor@porto.digital', password: 'senha123' }),
+  });
+
+  assert.equal(loginReativado.status, 200, 'reativacao deve devolver o acesso');
+
+  let perfilOculto = false;
+
+  try {
+    const ocultacao = await api(`/v1/admin/profiles/${startupId}/hide`, {
+      method: 'POST',
+      token: admin.body.token,
+      body: JSON.stringify({ motivo: '[Smoke] validar ocultacao' }),
+    });
+
+    assert.equal(ocultacao.status, 200);
+    assert.equal(ocultacao.body.tipo, 'STARTUP');
+    perfilOculto = true;
+
+    const listagemOculta = await api('/v1/startups?porPagina=50');
+    assert.equal(listagemOculta.status, 200);
+    assert.ok(
+      !listagemOculta.body.startups.some((startup: { id: string }) => startup.id === startupId),
+      'perfil oculto nao deve aparecer na listagem publica',
+    );
+  } finally {
+    if (perfilOculto) {
+      const restauracao = await api(`/v1/admin/profiles/${startupId}/restore`, {
+        method: 'POST',
+        token: admin.body.token,
+        body: JSON.stringify({ motivo: '[Smoke] restaurar apos teste' }),
+      });
+
+      assert.equal(restauracao.status, 200);
+    }
+  }
+
+  const listagemRestaurada = await api('/v1/startups?porPagina=50');
+  assert.ok(
+    listagemRestaurada.body.startups.some((startup: { id: string }) => startup.id === startupId),
+    'perfil restaurado deve voltar para a listagem publica',
+  );
+
+  const hoje = new Date();
+  const seteDiasAtras = new Date(hoje.getTime() - 6 * 86400000);
+  const from = seteDiasAtras.toISOString().slice(0, 10);
+  const to = hoje.toISOString().slice(0, 10);
+  const metricas = await api(`/v1/admin/metrics?from=${from}&to=${to}&granularity=day`, {
+    token: admin.body.token,
+  });
+
+  assert.equal(metricas.status, 200);
+  assert.equal(typeof metricas.body.users.newTotal, 'number');
+  assert.equal(typeof metricas.body.matches.created, 'number');
+  assert.equal(typeof metricas.body.messages.sent, 'number');
+  assert.equal(metricas.body.funnel.length, 4);
+  assert.ok(Array.isArray(metricas.body.series));
+  assert.ok(metricas.body.series.every((ponto: { bucket: string }) => /^\d{4}-\d{2}-\d{2}$/.test(ponto.bucket)));
+
+  const csv = await apiText(`/v1/admin/metrics/export.csv?from=${from}&to=${to}&granularity=day`, admin.body.token);
+
+  assert.equal(csv.status, 200);
+  assert.ok(csv.contentType.startsWith('text/csv'));
+  assert.ok(csv.disposicao.includes('attachment'));
+  assert.ok(csv.bom, 'CSV deve comecar com BOM UTF-8');
+  assert.ok(csv.body.startsWith('Secao;Indicador;Valor'), 'CSV deve ter cabecalho');
+  assert.ok(csv.body.includes('Resumo;Usuarios ativos;'));
+
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  const trilha = await api('/v1/audit?acao=STATUS_USUARIO_ALTERADO&porPagina=20', {
+    token: admin.body.token,
+  });
+
+  assert.equal(trilha.status, 200);
+  assert.ok(trilha.body.logs.length >= 1, 'suspensao e reativacao devem gerar auditoria');
+  assert.ok(
+    trilha.body.logs.some((log: { details: string | null }) =>
+      (log.details ?? '').includes('validar bloqueio de acesso'),
+    ),
+    'auditoria deve guardar o motivo informado',
+  );
 
   console.log('smoke: login com perfis passou');
 }

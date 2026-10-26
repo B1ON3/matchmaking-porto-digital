@@ -91,6 +91,7 @@ export interface StartupProfile {
   needs?: string | null;
   pitchUrl?: string | null;
   logoUrl?: string | null;
+  hiddenAt?: string | null;
   projects?: Project[];
   user?: PublicUser;
 }
@@ -106,6 +107,7 @@ export interface InvestorProfile {
   city?: string | null;
   state: string;
   bio?: string | null;
+  hiddenAt?: string | null;
   user?: PublicUser;
 }
 
@@ -282,6 +284,99 @@ export interface AdminOverview {
   }[];
   recentAudit: AdminAuditEntry[];
   recentUsers: PublicUser[];
+}
+
+export interface AdminUserProfile {
+  id: string;
+  companyName?: string | null;
+  sector?: string | null;
+  sectorInterest?: string | null;
+  city?: string | null;
+  state?: string | null;
+  hiddenAt?: string | null;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  lastLoginAt?: string | null;
+  suspendedAt?: string | null;
+  moderationReason?: string | null;
+  deletedAt?: string | null;
+  createdAt: string;
+  startupProfile?: AdminUserProfile | null;
+  investorProfile?: AdminUserProfile | null;
+}
+
+export interface AdminUsersPage {
+  total: number;
+  pagina: number;
+  porPagina: number;
+  users: AdminUser[];
+}
+
+export interface AdminMetricsByRole {
+  role: UserRole;
+  count: number;
+}
+
+export interface AdminMetricsTopItem {
+  label: string;
+  count: number;
+  share: number;
+}
+
+export interface AdminMetricsFunnelStep {
+  key: string;
+  label: string;
+  count: number;
+  conversionFromPrevious: number;
+}
+
+export interface AdminMetricsSeriesPoint {
+  bucket: string;
+  users: number;
+  matches: number;
+  messages: number;
+  appointments: number;
+}
+
+export interface AdminMetrics {
+  range: {
+    from: string;
+    to: string;
+    days: number;
+    granularity: 'day' | 'week';
+  };
+  users: {
+    newTotal: number;
+    activeTotal: number;
+    newByRole: AdminMetricsByRole[];
+    activeByRole: AdminMetricsByRole[];
+  };
+  matches: {
+    created: number;
+    accepted: number;
+    declined: number;
+    pending: number;
+  };
+  messages: {
+    sent: number;
+  };
+  appointments: {
+    created: number;
+    scheduled: number;
+    completed: number;
+    cancelled: number;
+  };
+  funnel: AdminMetricsFunnelStep[];
+  topSectors: AdminMetricsTopItem[];
+  topCities: AdminMetricsTopItem[];
+  topStages: AdminMetricsTopItem[];
+  series: AdminMetricsSeriesPoint[];
 }
 
 export interface PrivacyPolicySection {

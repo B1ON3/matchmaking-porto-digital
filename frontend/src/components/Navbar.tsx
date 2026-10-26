@@ -28,7 +28,7 @@ export function Navbar() {
     ...(temPerfil ? [{ to: '/perfil', label: 'Meu perfil' }] : []),
     { to: '/mensagens', label: 'Conversas' },
     { to: '/privacidade/conta', label: 'Privacidade' },
-    ...(ehAdmin ? [{ to: '/moderacao', label: 'Moderação' }] : []),
+    ...(ehAdmin ? [{ to: '/moderacao', label: 'Sala de Controle' }] : []),
   ];
 
   function classeLink({ isActive }: { isActive: boolean }) {

@@ -1,6 +1,8 @@
 import { api } from './api';
 import type {
+  AdminMetrics,
   AdminOverview,
+  AdminUsersPage,
   Appointment,
   AppointmentConflictPreview,
   AuditLog,
@@ -214,6 +216,42 @@ export const adminService = {
   async getOverview() {
     const { data } = await api.get<AdminOverview>('/v1/admin/overview');
     return data;
+  },
+
+  async listUsers(params?: Record<string, string | number>) {
+    const { data } = await api.get<AdminUsersPage>('/v1/admin/users', { params });
+    return data;
+  },
+
+  async updateUserStatus(id: string, status: 'ATIVO' | 'SUSPENSO', motivo: string) {
+    const { data } = await api.patch(`/v1/admin/users/${id}/status`, { status, motivo });
+    return data;
+  },
+
+  async hideProfile(id: string, motivo?: string) {
+    const { data } = await api.post(`/v1/admin/profiles/${id}/hide`, { motivo });
+    return data as { id: string; tipo: 'STARTUP' | 'INVESTOR'; hiddenAt: string };
+  },
+
+  async restoreProfile(id: string, motivo?: string) {
+    const { data } = await api.post(`/v1/admin/profiles/${id}/restore`, { motivo });
+    return data as { id: string; tipo: 'STARTUP' | 'INVESTOR'; hiddenAt: null };
+  },
+
+  async getMetrics(params: { from: string; to: string; granularity?: 'day' | 'week' }) {
+    const { data } = await api.get<AdminMetrics>('/v1/admin/metrics', { params });
+    return data;
+  },
+
+  async exportMetrics(params: { from: string; to: string; granularity?: 'day' | 'week' }) {
+    const resposta = await api.get<Blob>('/v1/admin/metrics/export.csv', {
+      params,
+      responseType: 'blob',
+    });
+    const disposicao = String(resposta.headers['content-disposition'] ?? '');
+    const nome = /filename="([^"]+)"/.exec(disposicao)?.[1] ?? 'laco-metricas.csv';
+
+    return { blob: resposta.data, filename: nome };
   },
 };
 
