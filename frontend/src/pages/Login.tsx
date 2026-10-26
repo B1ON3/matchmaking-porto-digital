@@ -14,6 +14,11 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [aviso] = useState(() => {
+    const mensagem = sessionStorage.getItem('laco:aviso') ?? '';
+    sessionStorage.removeItem('laco:aviso');
+    return mensagem;
+  });
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -37,6 +42,7 @@ export function Login() {
   return (
     <AuthLayout titulo="Entrar" subtitulo="Acesse com seu e-mail para continuar a conversa.">
       <form onSubmit={handleSubmit} className="card space-y-5">
+        {aviso && <Alert tipo="sucesso" mensagem={aviso} />}
         {erro && <Alert mensagem={erro} />}
 
         <div>

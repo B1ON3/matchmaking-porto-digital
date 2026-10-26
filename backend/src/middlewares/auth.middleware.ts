@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { UserRole } from '@prisma/client';
+import type { UserRole, UserStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { verifyToken } from '../services/token.service';
 import { HttpError } from '../utils/http-error';
@@ -13,6 +13,7 @@ declare global {
         email: string;
         role: UserRole;
         name: string;
+        status: UserStatus;
       };
     }
   }
@@ -37,11 +38,15 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, role: true, name: true },
+      select: { id: true, email: true, role: true, name: true, status: true },
     });
 
-    if (!user) {
+    if (!user || user.status === 'EXCLUIDO') {
       throw HttpError.unauthorized('Usuario do token nao existe mais');
+    }
+
+    if (user.status === 'SUSPENSO') {
+      throw HttpError.forbidden('Conta suspensa. Fale com a administracao para revisar o acesso.');
     }
 
     req.user = user;

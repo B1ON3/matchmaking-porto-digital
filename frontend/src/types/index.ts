@@ -1,5 +1,11 @@
 export type UserRole = 'STARTUP' | 'INVESTOR' | 'MENTOR' | 'ADMIN';
 
+export type UserStatus = 'ATIVO' | 'SUSPENSO' | 'EXCLUIDO';
+
+export type ConsentType = 'TERMOS_USO' | 'DADOS_PESSOAIS' | 'COMUNICACOES';
+
+export type ConsentStatus = 'CONCEDIDO' | 'REVOGADO';
+
 export type MatchStatus = 'PENDENTE' | 'ACEITO' | 'RECUSADO';
 
 export type AppointmentStatus = 'AGENDADO' | 'CONCLUIDO' | 'CANCELADO';
@@ -68,7 +74,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  status?: UserStatus;
   createdAt?: string;
+  lastLoginAt?: string;
   startupProfile?: StartupProfile | null;
   investorProfile?: InvestorProfile | null;
 }
@@ -204,4 +212,72 @@ export interface AdminOverview {
   }[];
   recentAudit: AdminAuditEntry[];
   recentUsers: PublicUser[];
+}
+
+export interface PrivacyPolicySection {
+  id: string;
+  title: string;
+  summary: string;
+  paragraphs: string[];
+  items?: string[];
+}
+
+export interface PrivacyPolicy {
+  version: string;
+  effectiveAt: string;
+  reviewDueAt: string;
+  title: string;
+  controller: string;
+  contact: string;
+  summary: string;
+  sections: PrivacyPolicySection[];
+  hash: string;
+}
+
+export interface ConsentSummary {
+  type: ConsentType;
+  status: ConsentStatus;
+  version: string;
+  acceptedAt: string;
+  revokedAt: string | null;
+}
+
+export interface ConsentRecord {
+  id: string;
+  type: ConsentType;
+  granted: boolean;
+  policyVersion: string;
+  policyHash: string;
+  acceptedAt: string;
+  revokedAt: string | null;
+  ip?: string | null;
+  userAgent?: string | null;
+}
+
+export interface PrivacyOverview {
+  policy: {
+    version: string;
+    hash: string;
+    effectiveAt: string;
+    reviewDueAt: string;
+    title: string;
+    contact: string;
+  };
+  account: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    status: UserStatus;
+    createdAt: string;
+    lastLoginAt: string | null;
+  };
+  consents: ConsentSummary[];
+  history: ConsentRecord[];
+  dataSummary: {
+    messages: number;
+    appointments: number;
+    matches: number;
+    auditEvents: number;
+  };
 }

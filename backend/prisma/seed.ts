@@ -1,13 +1,16 @@
 import {
   AppointmentStatus,
+  ConsentType,
   MatchStatus,
   PrismaClient,
   ProjectStatus,
   UserRole,
+  UserStatus,
   type InvestorProfile,
   type StartupProfile,
 } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { getPrivacyPolicy } from '../src/content/privacy-policy';
 import { calculaScore } from '../src/services/matching.rules';
 
 const prisma = new PrismaClient();
@@ -623,6 +626,35 @@ async function seedAuditLogs(
   }
 }
 
+async function seedConsents(userIds: string[]) {
+  const policy = getPrivacyPolicy();
+  const tipos: ConsentType[] = [ConsentType.TERMOS_USO, ConsentType.DADOS_PESSOAIS, ConsentType.COMUNICACOES];
+  const aceitoEm = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  let indice = 1;
+
+  for (const userId of userIds) {
+    for (const type of tipos) {
+      await prisma.consentRecord.upsert({
+        where: { id: seededId(9, indice) },
+        update: {},
+        create: {
+          id: seededId(9, indice),
+          userId,
+          type,
+          granted: true,
+          policyVersion: policy.version,
+          policyHash: policy.hash,
+          acceptedAt: aceitoEm,
+          ip: '127.0.0.1',
+          userAgent: 'seed-demo',
+        },
+      });
+
+      indice += 1;
+    }
+  }
+}
+
 async function main() {
   console.log('populando o banco com dados de exemplo...');
 
@@ -633,13 +665,21 @@ async function main() {
   for (const [index, seed] of startups.entries()) {
     const user = await prisma.user.upsert({
       where: { email: seed.email },
-      update: { name: seed.name, passwordHash: senhaHash, role: UserRole.STARTUP },
+      update: {
+        name: seed.name,
+        passwordHash: senhaHash,
+        role: UserRole.STARTUP,
+        status: UserStatus.ATIVO,
+        deletedAt: null,
+        lastLoginAt: new Date(),
+      },
       create: {
         id: seededId(1, index + 1),
         name: seed.name,
         email: seed.email,
         passwordHash: senhaHash,
         role: UserRole.STARTUP,
+        lastLoginAt: new Date(),
       },
     });
 
@@ -681,13 +721,21 @@ async function main() {
   for (const [index, seed] of investors.entries()) {
     const user = await prisma.user.upsert({
       where: { email: seed.email },
-      update: { name: seed.name, passwordHash: senhaHash, role: UserRole.INVESTOR },
+      update: {
+        name: seed.name,
+        passwordHash: senhaHash,
+        role: UserRole.INVESTOR,
+        status: UserStatus.ATIVO,
+        deletedAt: null,
+        lastLoginAt: new Date(),
+      },
       create: {
         id: seededId(1, index + 20),
         name: seed.name,
         email: seed.email,
         passwordHash: senhaHash,
         role: UserRole.INVESTOR,
+        lastLoginAt: new Date(),
       },
     });
 
@@ -722,27 +770,50 @@ async function main() {
 
   const mentor = await prisma.user.upsert({
     where: { email: 'mentor@porto.digital' },
-    update: { name: 'Sofia Mendes', passwordHash: senhaHash, role: UserRole.MENTOR },
+    update: {
+      name: 'Sofia Mendes',
+      passwordHash: senhaHash,
+      role: UserRole.MENTOR,
+      status: UserStatus.ATIVO,
+      deletedAt: null,
+      lastLoginAt: new Date(),
+    },
     create: {
       id: seededId(1, 40),
       name: 'Sofia Mendes',
       email: 'mentor@porto.digital',
       passwordHash: senhaHash,
       role: UserRole.MENTOR,
+      lastLoginAt: new Date(),
     },
   });
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@porto.digital' },
-    update: { name: 'Administrador', passwordHash: senhaHash, role: UserRole.ADMIN },
+    update: {
+      name: 'Administrador',
+      passwordHash: senhaHash,
+      role: UserRole.ADMIN,
+      status: UserStatus.ATIVO,
+      deletedAt: null,
+      lastLoginAt: new Date(),
+    },
     create: {
       id: seededId(1, 41),
       name: 'Administrador',
       email: 'admin@porto.digital',
       passwordHash: senhaHash,
       role: UserRole.ADMIN,
+      lastLoginAt: new Date(),
     },
   });
+
+  await seedConsents([
+    ...startupProfiles.map((profile) => profile.userId),
+    ...investorProfiles.map((profile) => profile.userId),
+    mentor.id,
+    admin.id,
+  ]);
 
   for (const [index, project] of projects.entries()) {
     await prisma.project.upsert({

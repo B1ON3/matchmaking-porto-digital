@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
+import { SiteFooter } from './components/SiteFooter';
 import { Spinner } from './components/Spinner';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -12,6 +13,8 @@ import { Profile } from './pages/Profile';
 import { Messages } from './pages/Messages';
 import { Appointments } from './pages/Appointments';
 import { Moderation } from './pages/Moderation';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { PrivacyCenter } from './pages/PrivacyCenter';
 import type { UserRole } from './types';
 
 function Protegida({ children, perfis }: { children: ReactElement; perfis?: UserRole[] }) {
@@ -30,9 +33,10 @@ function Protegida({ children, perfis }: { children: ReactElement; perfis?: User
   }
 
   return (
-    <div className="min-h-screen bg-areia-50 dark:bg-noite-900">
+    <div className="flex min-h-screen flex-col bg-areia-50 dark:bg-noite-900">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+      <SiteFooter />
     </div>
   );
 }
@@ -49,6 +53,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Register />} />
       <Route path="/esqueci-senha" element={<ForgotPassword />} />
+      <Route path="/privacidade" element={<PrivacyPolicy />} />
 
       <Route
         path="/dashboard"
@@ -63,6 +68,14 @@ export default function App() {
         element={
           <Protegida perfis={['STARTUP', 'INVESTOR', 'MENTOR']}>
             <Profile />
+          </Protegida>
+        }
+      />
+      <Route
+        path="/privacidade/conta"
+        element={
+          <Protegida>
+            <PrivacyCenter />
           </Protegida>
         }
       />

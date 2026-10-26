@@ -25,6 +25,7 @@ export function Navbar() {
     { to: '/conexoes', label: 'Conexões' },
     ...(temPerfil ? [{ to: '/perfil', label: 'Meu perfil' }] : []),
     { to: '/mensagens', label: 'Conversas' },
+    { to: '/privacidade/conta', label: 'Privacidade' },
     ...(ehAdmin ? [{ to: '/moderacao', label: 'Moderação' }] : []),
   ];
 

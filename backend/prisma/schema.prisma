@@ -10,22 +10,47 @@ datasource db {
 }
 
 model User {
-  id               String           @id @default(uuid())
+  id               String               @id @default(uuid())
   name             String
-  email            String           @unique
+  email            String               @unique
   passwordHash     String
-  role             UserRole         @default(STARTUP)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  appointmentsMade Appointment[]    @relation("AppointmentCreator")
+  role             UserRole             @default(STARTUP)
+  status           UserStatus           @default(ATIVO)
+  lastLoginAt      DateTime?
+  suspendedAt      DateTime?
+  moderationReason String?
+  deletedAt        DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  appointmentsMade Appointment[]        @relation("AppointmentCreator")
   auditLogs        AuditLog[]
+  consents         ConsentRecord[]
   investorProfile  InvestorProfile?
-  receivedMessages Message[]        @relation("MessageRecipient")
-  sentMessages     Message[]        @relation("MessageSender")
+  receivedMessages Message[]            @relation("MessageRecipient")
+  sentMessages     Message[]            @relation("MessageSender")
   startupProfile   StartupProfile?
   passwordResets   PasswordResetToken[]
 
+  @@index([status])
   @@map("users")
+}
+
+// historico imutavel de consentimentos: cada aceite ou revogacao vira uma linha
+model ConsentRecord {
+  id            String      @id @default(uuid())
+  userId        String
+  type          ConsentType
+  granted       Boolean
+  policyVersion String
+  policyHash    String
+  acceptedAt    DateTime    @default(now())
+  revokedAt     DateTime?
+  ip            String?
+  userAgent     String?
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, acceptedAt])
+  @@map("consent_records")
 }
 
 // token de redefinicao de senha: guardamos apenas o hash, com expiracao e uso unico
@@ -161,10 +186,11 @@ model AuditLog {
   userAgent String?
   userId    String?
   createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([entity])
+  @@index([userId])
   @@map("audit_logs")
 }
 
@@ -173,6 +199,18 @@ enum UserRole {
   INVESTOR
   MENTOR
   ADMIN
+}
+
+enum UserStatus {
+  ATIVO
+  SUSPENSO
+  EXCLUIDO
+}
+
+enum ConsentType {
+  TERMOS_USO
+  DADOS_PESSOAIS
+  COMUNICACOES
 }
 
 enum MatchStatus {

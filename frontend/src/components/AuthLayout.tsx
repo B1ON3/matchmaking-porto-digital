@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -64,6 +65,16 @@ export function AuthLayout({ children, titulo, subtitulo, largura = 'md' }: Auth
             </div>
 
             {children}
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-200/80 pt-5 text-xs text-slate-500 dark:border-noite-700 dark:text-slate-400">
+              <Link to="/privacidade" className="hover:text-laco-800 dark:hover:text-areia-100">
+                Política de privacidade
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link to="/privacidade#termos-de-uso" className="hover:text-laco-800 dark:hover:text-areia-100">
+                Termos de uso
+              </Link>
+            </div>
           </div>
         </main>
       </div>

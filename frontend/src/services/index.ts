@@ -6,6 +6,8 @@ import type {
   InvestorInsights,
   Match,
   Message,
+  PrivacyOverview,
+  PrivacyPolicy,
   Project,
   ProjectStatus,
   StartupInsights,
@@ -203,5 +205,38 @@ export const projectService = {
 
   async remove(startupId: string, projectId: string) {
     await api.delete(`/v1/startups/${startupId}/projects/${projectId}`);
+  },
+};
+
+export const privacyService = {
+  async policy(): Promise<PrivacyPolicy> {
+    const { data } = await api.get<PrivacyPolicy>('/v1/privacy/policy');
+    return data;
+  },
+
+  async overview(): Promise<PrivacyOverview> {
+    const { data } = await api.get<PrivacyOverview>('/v1/me/privacy');
+    return data;
+  },
+
+  async recordConsent(type: 'TERMOS_USO' | 'DADOS_PESSOAIS' | 'COMUNICACOES', granted: boolean) {
+    const { data } = await api.post('/v1/me/privacy/consents', { type, granted });
+    return data as { mensagem: string };
+  },
+
+  async exportData(): Promise<{ blob: Blob; filename: string }> {
+    const resposta = await api.get<Blob>('/v1/me/privacy/export', { responseType: 'blob' });
+    const disposicao = String(resposta.headers['content-disposition'] ?? '');
+    const nome = /filename="([^"]+)"/.exec(disposicao)?.[1] ?? 'laco-portabilidade.json';
+
+    return { blob: resposta.data, filename: nome };
+  },
+
+  async deleteAccount(password: string, confirmation: string) {
+    const { data } = await api.delete('/v1/me/privacy/account', {
+      data: { password, confirmation },
+    });
+
+    return data as { mensagem: string };
   },
 };

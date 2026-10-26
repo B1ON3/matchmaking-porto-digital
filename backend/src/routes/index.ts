@@ -9,6 +9,7 @@ import { messageRoutes } from './messages.routes';
 import { appointmentRoutes } from './appointments.routes';
 import { auditRoutes } from './audit.routes';
 import { adminRoutes } from './admin.routes';
+import { mePrivacyRoutes, privacyRoutes } from './privacy.routes';
 
 export const routes = Router();
 
@@ -30,6 +31,8 @@ routes.get('/', (_req: Request, res: Response) => {
       agendamentos: '/api/v1/appointments',
       auditoria: '/api/v1/audit',
       admin: '/api/v1/admin',
+      privacidade: '/api/v1/privacy/policy',
+      minhaPrivacidade: '/api/v1/me/privacy',
     },
     autenticacao: 'Bearer token em /api/v1/auth/login. As rotas marcadas como privadas exigem o header Authorization.',
   });
@@ -63,3 +66,5 @@ routes.use('/v1/messages', messageRoutes);
 routes.use('/v1/appointments', appointmentRoutes);
 routes.use('/v1/audit', auditRoutes);
 routes.use('/v1/admin', adminRoutes);
+routes.use('/v1/privacy', privacyRoutes);
+routes.use('/v1/me/privacy', mePrivacyRoutes);

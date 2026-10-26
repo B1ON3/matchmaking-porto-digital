@@ -3,12 +3,15 @@ import { UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { env } from '../config/env';
 import { prisma } from '../config/prisma';
+import { createWithConsents, findCredentialsByEmail, registerLogin } from '../repositories/user.repository';
+import { consentimentosDeCadastro } from '../services/privacy.service';
 import { redefinirSenha, solicitarRedefinicao } from '../services/password-reset.service';
 import { generateToken } from '../services/token.service';
 import { comparePassword, hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
 import { emailSchema } from '../utils/email';
 import { enviarEmailRedefinicao } from '../utils/mailer';
+import { getRequestContext } from '../utils/request-context';
 
 const cadastroSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
@@ -36,6 +39,15 @@ const cadastroSchema = z.object({
       state: z.string().length(2),
     })
     .optional(),
+  acceptedTerms: z.literal(true, {
+    errorMap: () => ({ message: 'é necessário aceitar os termos de uso' }),
+  }),
+  acceptedPrivacy: z.literal(true, {
+    errorMap: () => ({ message: 'é necessário aceitar a política de privacidade' }),
+  }),
+  termsVersion: z.string().trim().min(1, 'versão dos termos ausente'),
+  privacyVersion: z.string().trim().min(1, 'versão da política ausente'),
+  communicationsOptIn: z.boolean().default(false),
 });
 
 const loginSchema = z.object({
@@ -74,24 +86,36 @@ export async function register(req: Request, res: Response) {
     throw HttpError.conflict('ja existe um cadastro com esse email');
   }
 
-  const user = await prisma.user.create({
-    data: {
+  const consentimentos = consentimentosDeCadastro(
+    {
+      termsVersion: dados.termsVersion,
+      privacyVersion: dados.privacyVersion,
+      communicationsOptIn: dados.communicationsOptIn,
+    },
+    getRequestContext(req),
+  );
+
+  const user = await createWithConsents(
+    {
       name: dados.name,
       email: dados.email,
       passwordHash: await hashPassword(dados.password),
       role: dados.role,
+      lastLoginAt: new Date(),
       startupProfile: dados.startup ? { create: dados.startup } : undefined,
       investorProfile: dados.investor ? { create: dados.investor } : undefined,
     },
-    select: {
+    consentimentos,
+    {
       id: true,
       name: true,
       email: true,
       role: true,
+      status: true,
       startupProfile: true,
       investorProfile: true,
     },
-  });
+  );
 
   const token = generateToken({ sub: user.id, email: user.email, role: user.role });
 
@@ -102,13 +126,16 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
   const { email, password } = loginSchema.parse(req.body);
 
-  const credenciais = await prisma.user.findUnique({
-    where: { email },
-    select: { id: true, passwordHash: true },
-  });
+  const credenciais = await findCredentialsByEmail(email);
 
   if (!credenciais) {
     throw HttpError.unauthorized('email ou senha invalidos');
+  }
+
+  if (credenciais.status !== 'ATIVO') {
+    throw credenciais.status === 'SUSPENSO'
+      ? HttpError.forbidden('Conta suspensa. Fale com a administração para revisar o acesso.')
+      : HttpError.unauthorized('email ou senha invalidos');
   }
 
   const senhaConfere = await comparePassword(password, credenciais.passwordHash);
@@ -124,7 +151,9 @@ export async function login(req: Request, res: Response) {
       name: true,
       email: true,
       role: true,
+      status: true,
       createdAt: true,
+      lastLoginAt: true,
       startupProfile: true,
       investorProfile: true,
     },
@@ -133,6 +162,8 @@ export async function login(req: Request, res: Response) {
   if (!user) {
     throw HttpError.unauthorized('email ou senha invalidos');
   }
+
+  await registerLogin(user.id);
 
   const token = generateToken({ sub: user.id, email: user.email, role: user.role });
 
@@ -176,7 +207,9 @@ export async function me(req: Request, res: Response) {
       name: true,
       email: true,
       role: true,
+      status: true,
       createdAt: true,
+      lastLoginAt: true,
       startupProfile: true,
       investorProfile: true,
     },
