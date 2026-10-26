@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "vercel-build": "prisma generate && npm run build",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit && tsc -p api/tsconfig.json",
+    "typecheck": "tsc --noEmit",
     "test": "npm run test:matching && npm run test:compatibility && npm run test:conversation && npm run test:appointments && npm run test:privacy && npm run test:encryption && npm run test:admin",
     "test:matching": "tsx src/services/matching.rules.test.ts",
     "test:compatibility": "tsx src/services/compatibility.service.test.ts",

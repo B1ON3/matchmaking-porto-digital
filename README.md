@@ -254,8 +254,13 @@ O repositório é publicado como **dois projetos Vercel independentes**, cada um
 ### Backend (API)
 
 - **Root Directory:** `backend`
-- **Build Command:** `npm run vercel-build` (já definido em `backend/vercel.json`)
-- A API é servida pela função `backend/api/[...path].ts`, que expõe o Express em `/api/*`.
+- **Framework Preset:** `Express` (detecta `src/server.ts` e serve o app em todas as rotas)
+- **Build Command:** `npm run build` (padrão do preset)
+- **Install Command:** `npm install` (o `postinstall` roda `prisma generate`)
+
+> Não crie a pasta `api/` nem um `vercel.json` com `functions`. O preset Express já
+> expõe `src/server.ts` em `/*` e o próprio app monta as rotas em `/api`; uma função
+> catch-all em `api/` sombreia esse caminho e quebra o build/deploy.
 
 Environment Variables (Production e Preview):
 
