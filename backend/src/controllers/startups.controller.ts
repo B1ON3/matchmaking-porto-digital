@@ -6,6 +6,7 @@ import { generateToken } from '../services/token.service';
 import { hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
 import { emailSchema } from '../utils/email';
+import { dataOpcional, emailOpcional, inteiroOpcional, textoOpcional, urlOpcional } from '../utils/zod-fields';
 
 const startupSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
@@ -17,10 +18,17 @@ const startupSchema = z.object({
   stage: z.string().min(2, 'informe o estagio'),
   city: z.string().min(2, 'informe a cidade'),
   state: z.string().length(2, 'use a sigla do estado, ex: PE'),
-  website: z.string().url('url invalida').optional(),
-  needs: z.string().optional(),
-  pitchUrl: z.string().url('url invalida').optional(),
-  logoUrl: z.string().url('url invalida').optional(),
+  website: urlOpcional(),
+  foundedAt: dataOpcional(),
+  needs: textoOpcional(1000),
+  pitchUrl: urlOpcional(),
+  logoUrl: urlOpcional(),
+  businessModel: textoOpcional(300),
+  teamSize: inteiroOpcional(1, 10_000),
+  revenue: textoOpcional(200),
+  linkedin: urlOpcional(),
+  contactEmail: emailOpcional(),
+  phone: textoOpcional(40),
 });
 
 const updateSchema = startupSchema.partial().omit({ email: true, password: true });

@@ -9,14 +9,19 @@ export const startupRoutes = Router();
 
 startupRoutes.post('/', create);
 startupRoutes.get('/', list);
-startupRoutes.get('/:id/insights', authenticate, startupInsights);
+startupRoutes.get(
+  '/:id/insights',
+  authenticate,
+  authorize(UserRole.STARTUP, UserRole.INVESTOR, UserRole.MENTOR),
+  startupInsights,
+);
 startupRoutes.get('/:id', show);
 
 // a partir daqui tudo exige token valido
 startupRoutes.use(authenticate);
 startupRoutes.get('/:id/projects', listProjects);
-startupRoutes.post('/:id/projects', authorize(UserRole.STARTUP, UserRole.ADMIN), createProject);
-startupRoutes.put('/:id/projects/:projectId', authorize(UserRole.STARTUP, UserRole.ADMIN), updateProject);
-startupRoutes.delete('/:id/projects/:projectId', authorize(UserRole.STARTUP, UserRole.ADMIN), removeProject);
-startupRoutes.put('/:id', authorize(UserRole.STARTUP, UserRole.ADMIN), update);
-startupRoutes.delete('/:id', authorize(UserRole.STARTUP, UserRole.ADMIN), remove);
+startupRoutes.post('/:id/projects', authorize(UserRole.STARTUP), createProject);
+startupRoutes.put('/:id/projects/:projectId', authorize(UserRole.STARTUP), updateProject);
+startupRoutes.delete('/:id/projects/:projectId', authorize(UserRole.STARTUP), removeProject);
+startupRoutes.put('/:id', authorize(UserRole.STARTUP), update);
+startupRoutes.delete('/:id', authorize(UserRole.STARTUP), remove);

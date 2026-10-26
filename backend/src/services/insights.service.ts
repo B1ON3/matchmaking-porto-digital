@@ -1,4 +1,4 @@
-import { MatchStatus, UserRole } from '@prisma/client';
+import { MatchStatus, TicketStatus, UserRole } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { HttpError } from '../utils/http-error';
 import { calculaSetor, normalizarTexto } from './matching.rules';
@@ -271,9 +271,10 @@ export async function getAdminOverview() {
     messages,
     appointments,
     projects,
-    topMatches,
     recentAudit,
     recentUsers,
+    ticketCounts,
+    recentTickets,
   ] = await Promise.all([
     prisma.startupProfile.count(),
     prisma.user.groupBy({ by: ['role'], _count: { _all: true } }),
@@ -283,14 +284,6 @@ export async function getAdminOverview() {
     prisma.message.count(),
     prisma.appointment.count(),
     prisma.project.count(),
-    prisma.match.findMany({
-      orderBy: { score: 'desc' },
-      take: 6,
-      include: {
-        startup: { select: { companyName: true } },
-        investor: { select: { companyName: true, user: { select: { name: true } } } },
-      },
-    }),
     prisma.auditLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 8,
@@ -300,6 +293,27 @@ export async function getAdminOverview() {
       orderBy: { createdAt: 'desc' },
       take: 8,
       select: { id: true, name: true, role: true, createdAt: true },
+    }),
+    prisma.ticket.groupBy({ by: ['status'], _count: { _all: true } }),
+    prisma.ticket.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        protocol: true,
+        category: true,
+        subject: true,
+        status: true,
+        priority: true,
+        createdAt: true,
+        reporter: { select: { name: true } },
+        targetUser: { select: { name: true } },
+        _count: {
+          select: {
+            messages: { where: { readAt: null, sender: { role: { not: UserRole.ADMIN } } } },
+          },
+        },
+      },
     }),
   ]);
 
@@ -333,13 +347,6 @@ export async function getAdminOverview() {
       }))
       .sort((a, b) => b.count - a.count),
     stages: estagios.map((item) => ({ stage: item.stage, count: item._count._all })).sort((a, b) => b.count - a.count),
-    topMatches: topMatches.map((match) => ({
-      id: match.id,
-      score: match.score,
-      status: match.status,
-      startup: match.startup.companyName,
-      investor: match.investor.companyName ?? match.investor.user.name,
-    })),
     recentAudit: recentAudit.map((log) => ({
       id: log.id,
       action: log.action,
@@ -349,5 +356,17 @@ export async function getAdminOverview() {
       user: log.user?.name ?? 'Sistema',
     })),
     recentUsers,
+    tickets: {
+      byStatus: Object.fromEntries(ticketCounts.map((item) => [item.status, item._count._all])),
+      open: ticketCounts.find((item) => item.status === TicketStatus.ABERTO)?._count._all ?? 0,
+      inReview: ticketCounts.find((item) => item.status === TicketStatus.EM_ANALISE)?._count._all ?? 0,
+      waitingUser: ticketCounts.find((item) => item.status === TicketStatus.AGUARDANDO_USUARIO)?._count._all ?? 0,
+      resolved: ticketCounts.find((item) => item.status === TicketStatus.RESOLVIDO)?._count._all ?? 0,
+      archived: ticketCounts.find((item) => item.status === TicketStatus.ARQUIVADO)?._count._all ?? 0,
+    },
+    recentTickets: recentTickets.map((ticket) => ({
+      ...ticket,
+      naoLidas: ticket._count.messages,
+    })),
   };
 }

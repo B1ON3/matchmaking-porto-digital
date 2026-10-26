@@ -12,6 +12,26 @@ export type AppointmentStatus = 'AGENDADO' | 'CONCLUIDO' | 'CANCELADO';
 
 export type ProjectStatus = 'PLANEJADO' | 'EM_ANDAMENTO' | 'CONCLUIDO';
 
+export type TrustStatus = 'NAO_AVALIADO' | 'CONFIAVEL' | 'SUSPEITO' | 'GOLPE';
+
+export type TicketCategory = 'GOLPE' | 'PERFIL_FALSO' | 'ASSEDIO' | 'SPAM' | 'DADOS_INCORRETOS' | 'SUPORTE' | 'OUTRO';
+
+export type TicketStatus = 'ABERTO' | 'EM_ANALISE' | 'AGUARDANDO_USUARIO' | 'RESOLVIDO' | 'ARQUIVADO';
+
+export type TicketPriority = 'BAIXA' | 'NORMAL' | 'ALTA' | 'URGENTE';
+
+export type TicketActionType =
+  | 'ACESSO_AUTORIZADO'
+  | 'OBSERVACAO'
+  | 'USUARIO_SUSPENSO'
+  | 'USUARIO_REATIVADO'
+  | 'PERFIL_OCULTADO'
+  | 'PERFIL_RESTAURADO'
+  | 'GOLPE_CONFIRMADO'
+  | 'GOLPE_DESCARTADO'
+  | 'SUSPEITA_MARCADA'
+  | 'SUSPEITA_REMOVIDA';
+
 export interface Project {
   id: string;
   startupId: string;
@@ -91,6 +111,12 @@ export interface StartupProfile {
   needs?: string | null;
   pitchUrl?: string | null;
   logoUrl?: string | null;
+  businessModel?: string | null;
+  teamSize?: number | null;
+  revenue?: string | null;
+  linkedin?: string | null;
+  contactEmail?: string | null;
+  phone?: string | null;
   hiddenAt?: string | null;
   projects?: Project[];
   user?: PublicUser;
@@ -107,6 +133,15 @@ export interface InvestorProfile {
   city?: string | null;
   state: string;
   bio?: string | null;
+  investorType?: string | null;
+  website?: string | null;
+  linkedin?: string | null;
+  investmentThesis?: string | null;
+  preferredGeography?: string | null;
+  portfolioUrl?: string | null;
+  contactEmail?: string | null;
+  phone?: string | null;
+  experience?: string | null;
   hiddenAt?: string | null;
   user?: PublicUser;
 }
@@ -117,6 +152,7 @@ export interface User {
   email: string;
   role: UserRole;
   status?: UserStatus;
+  trustStatus?: TrustStatus;
   createdAt?: string;
   lastLoginAt?: string;
   startupProfile?: StartupProfile | null;
@@ -275,15 +311,133 @@ export interface AdminOverview {
   acceptanceRate: number;
   sectors: { sector: string; count: number; share: number }[];
   stages: { stage: string; count: number }[];
-  topMatches: {
+  recentAudit: AdminAuditEntry[];
+  recentUsers: PublicUser[];
+  tickets: {
+    byStatus: Partial<Record<TicketStatus, number>>;
+    open: number;
+    inReview: number;
+    waitingUser: number;
+    resolved: number;
+    archived: number;
+  };
+  recentTickets: {
+    id: string;
+    protocol: string;
+    category: TicketCategory;
+    subject: string;
+    status: TicketStatus;
+    priority: TicketPriority;
+    createdAt: string;
+    reporter?: { name: string } | null;
+    targetUser?: { name: string } | null;
+    naoLidas?: number;
+  }[];
+}
+
+export interface TicketUser extends PublicUser {
+  role: UserRole;
+  status: UserStatus;
+  trustStatus: TrustStatus;
+  trustReason?: string | null;
+  trustUpdatedAt?: string | null;
+  lastLoginAt?: string | null;
+  suspendedAt?: string | null;
+  moderationReason?: string | null;
+}
+
+export interface TicketMessage {
+  id: string;
+  ticketId: string;
+  senderId: string;
+  content: string;
+  readAt?: string | null;
+  createdAt: string;
+  sender: { id: string; name: string; role: UserRole };
+}
+
+export interface TicketAction {
+  id: string;
+  ticketId: string;
+  adminId: string;
+  action: TicketActionType;
+  notes?: string | null;
+  createdAt: string;
+  admin: { id: string; name: string };
+}
+
+export interface TicketSummary {
+  id: string;
+  protocol: string;
+  category: TicketCategory;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  resolution?: string | null;
+  reporterId: string;
+  targetUserId?: string | null;
+  resolvedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  reporter?: TicketUser | null;
+  targetUser?: TicketUser | null;
+  messages: TicketMessage[];
+  naoLidas?: number;
+}
+
+export interface TicketContextMatch {
+  id: string;
+  score: number;
+  status: MatchStatus;
+  createdAt: string;
+  startup: string;
+  investor: string;
+}
+
+export interface TicketContextAppointment {
+  id: string;
+  title: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  status: AppointmentStatus;
+  createdAt: string;
+  createdBy: string;
+  match: {
     id: string;
     score: number;
     status: MatchStatus;
     startup: string;
     investor: string;
-  }[];
-  recentAudit: AdminAuditEntry[];
-  recentUsers: PublicUser[];
+  } | null;
+}
+
+export interface TicketContext {
+  alvo: TicketUser & {
+    createdAt: string;
+    startupProfile?: StartupProfile | null;
+    investorProfile?: InvestorProfile | null;
+  };
+  matches: TicketContextMatch[];
+  appointments: TicketContextAppointment[];
+}
+
+export interface Ticket extends TicketSummary {
+  reporter: TicketUser;
+  targetUser?: TicketUser | null;
+  actions?: TicketAction[];
+  contexto?: TicketContext | null;
+}
+
+export interface AdminTicketsPage extends Paginated {
+  resumo: {
+    abertos: number;
+    emAnalise: number;
+    aguardandoUsuario: number;
+    resolvidos: number;
+    arquivados: number;
+  };
+  chamados: TicketSummary[];
 }
 
 export interface AdminUserProfile {
@@ -302,6 +456,9 @@ export interface AdminUser {
   email: string;
   role: UserRole;
   status: UserStatus;
+  trustStatus: TrustStatus;
+  trustReason?: string | null;
+  trustUpdatedAt?: string | null;
   lastLoginAt?: string | null;
   suspendedAt?: string | null;
   moderationReason?: string | null;

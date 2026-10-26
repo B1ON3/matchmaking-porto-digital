@@ -51,7 +51,7 @@ export async function list(req: Request, res: Response) {
     return res.json({ total, pagina, porPagina, perfil: 'startup', matches });
   }
 
-  if (role === UserRole.INVESTOR) {
+  if (role === UserRole.INVESTOR || role === UserRole.MENTOR) {
     const perfil = await prisma.investorProfile.findUnique({
       where: { userId },
       select: { id: true },
@@ -80,21 +80,9 @@ export async function list(req: Request, res: Response) {
     return res.json({ total, pagina, porPagina, perfil: 'investor', matches });
   }
 
-  // admin ve tudo que existe
-  const matches = await prisma.match.findMany({
-    where: { score: { gte: minimo } },
-    include: {
-      startup: { include: { user: { select: { id: true, name: true } } } },
-      investor: { include: { user: { select: { id: true, name: true } } } },
-    },
-    orderBy: { score: 'desc' },
-    skip: (pagina - 1) * porPagina,
-    take: porPagina,
-  });
-
-  const total = await prisma.match.count({ where: { score: { gte: minimo } } });
-
-  return res.json({ total, pagina, porPagina, perfil: 'admin', matches });
+  // qualquer outro papel nao tem uma visao global de conexoes: o admin so
+  // consulta o contexto de uma pessoa denunciada dentro de /admin/tickets/:id
+  throw HttpError.forbidden('seu papel nao tem acesso a lista de conexoes');
 }
 
 // GET /api/matches/:id/compatibility
@@ -123,7 +111,7 @@ export async function show(req: Request, res: Response) {
 
   const ehEnvolvido = match.startup.userId === req.user!.id || match.investor.userId === req.user!.id;
 
-  if (!ehEnvolvido && req.user!.role !== UserRole.ADMIN) {
+  if (!ehEnvolvido) {
     throw HttpError.forbidden('voce nao faz parte desse match');
   }
 
@@ -146,7 +134,7 @@ export async function updateStatus(req: Request, res: Response) {
 
   const ehEnvolvido = match.startup.userId === req.user!.id || match.investor.userId === req.user!.id;
 
-  if (!ehEnvolvido && req.user!.role !== UserRole.ADMIN) {
+  if (!ehEnvolvido) {
     throw HttpError.forbidden('voce nao faz parte desse match');
   }
 
@@ -168,7 +156,7 @@ export async function regenerate(req: Request, res: Response) {
     throw HttpError.notFound('startup nao encontrada');
   }
 
-  if (startup.userId !== req.user!.id && req.user!.role !== UserRole.ADMIN) {
+  if (startup.userId !== req.user!.id) {
     throw HttpError.forbidden('voce so pode recalcular os matches da sua startup');
   }
 

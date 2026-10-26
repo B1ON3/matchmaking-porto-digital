@@ -9,6 +9,7 @@ import {
   restoreProfile,
   updateUserStatus,
 } from '../controllers/admin.controller';
+import { executeAction, listAdmin, sendAdminMessage, showAdmin, updateStatus } from '../controllers/tickets.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 import { auditLog } from '../middlewares/audit.middleware';
 
@@ -59,3 +60,35 @@ adminRoutes.get(
   exportMetricsCsv,
 );
 adminRoutes.get('/metrics', metrics);
+
+// help desk: o contexto de conexoes e agendamentos do denunciado so e
+// carregado a partir de um chamado aberto por startup/investidor.
+adminRoutes.get('/tickets', listAdmin);
+adminRoutes.get(
+  '/tickets/:id',
+  auditLog({
+    action: 'CHAMADO_CONTEXTO_ACESSADO',
+    entity: 'Ticket',
+    getEntityId: (_req, res) => res.locals.auditEntityId as string | undefined,
+  }),
+  showAdmin,
+);
+adminRoutes.post('/tickets/:id/messages', sendAdminMessage);
+adminRoutes.patch(
+  '/tickets/:id/status',
+  auditLog({
+    action: 'CHAMADO_STATUS_ALTERADO',
+    entity: 'Ticket',
+    getEntityId: (_req, res) => res.locals.auditEntityId as string | undefined,
+  }),
+  updateStatus,
+);
+adminRoutes.post(
+  '/tickets/:id/actions',
+  auditLog({
+    action: 'CHAMADO_ACAO_ADMINISTRATIVA',
+    entity: 'Ticket',
+    getEntityId: (_req, res) => res.locals.auditEntityId as string | undefined,
+  }),
+  executeAction,
+);

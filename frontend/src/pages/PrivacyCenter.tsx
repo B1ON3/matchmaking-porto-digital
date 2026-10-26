@@ -293,18 +293,24 @@ export function PrivacyCenter() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { rotulo: 'Mensagens', valor: dados.dataSummary.messages },
-          { rotulo: 'Conexões', valor: dados.dataSummary.matches },
-          { rotulo: 'Reuniões', valor: dados.dataSummary.appointments },
-          { rotulo: 'Eventos de auditoria', valor: dados.dataSummary.auditEvents },
-        ].map((item) => (
-          <div key={item.rotulo} className="card">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{item.rotulo}</p>
-            <p className="mt-1 font-display text-3xl font-semibold text-slate-900">{item.valor}</p>
-          </div>
-        ))}
+      <section id="meus-dados" className="scroll-mt-24 space-y-3">
+        <SectionHeader
+          title="Meus dados"
+          description="Resumo do que está armazenado na plataforma. O download completo fica logo abaixo."
+        />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { rotulo: 'Mensagens', valor: dados.dataSummary.messages },
+            { rotulo: 'Conexões', valor: dados.dataSummary.matches },
+            { rotulo: 'Reuniões', valor: dados.dataSummary.appointments },
+            { rotulo: 'Eventos de auditoria', valor: dados.dataSummary.auditEvents },
+          ].map((item) => (
+            <div key={item.rotulo} className="card">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{item.rotulo}</p>
+              <p className="mt-1 font-display text-3xl font-semibold text-slate-900">{item.valor}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="card overflow-hidden p-0">

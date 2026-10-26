@@ -25,7 +25,8 @@ export function Moderation() {
           Sala de Controle
         </h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
-          Modere pessoas e perfis, acompanhe o uso do ecossistema e audite cada ação administrativa.
+          Consulte pessoas e reputação, acompanhe o uso do ecossistema e audite cada ação administrativa. A moderação de
+          contas acontece somente a partir dos chamados.
         </p>
       </div>
 
@@ -33,7 +34,7 @@ export function Moderation() {
 
       {aviso && <Alert tipo="sucesso" mensagem={aviso} />}
 
-      {aba === 'pessoas' && <PeopleTab onAviso={setAviso} />}
+      {aba === 'pessoas' && <PeopleTab />}
       {aba === 'auditoria' && <AuditTab />}
       {aba === 'metricas' && <MetricsTab onAviso={setAviso} />}
     </div>

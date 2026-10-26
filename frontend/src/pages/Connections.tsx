@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUnread } from '../context/UnreadContext';
 import { Alert } from '../components/Alert';
 import { Avatar } from '../components/Avatar';
 import { CompatibilityDrawer } from '../components/CompatibilityDrawer';
 import { ProfileModal } from '../components/ProfileModal';
 import { ProgressRing } from '../components/ProgressRing';
+import { ReportModal } from '../components/ReportModal';
 import { Skeleton } from '../components/Skeleton';
 import { StatCard } from '../components/StatCard';
 import { matchService } from '../services';
@@ -132,6 +134,7 @@ function BadgeStatus({ status }: { status: MatchStatus }) {
 
 export function Connections() {
   const { user, isStartup, isInvestor } = useAuth();
+  const { refresh: refreshUnread } = useUnread();
 
   const [matches, setMatches] = useState<Match[]>([]);
   const [filtro, setFiltro] = useState<FiltroId>('todos');
@@ -143,6 +146,7 @@ export function Connections() {
   const [processandoId, setProcessandoId] = useState<string | null>(null);
   const [selecionado, setSelecionado] = useState<PerfilSelecionado | null>(null);
   const [comparando, setComparando] = useState<Match | null>(null);
+  const [denunciando, setDenunciando] = useState<{ userId: string; nome: string } | null>(null);
 
   const ehStaff = Boolean(user && !isStartup && !isInvestor);
 
@@ -517,6 +521,7 @@ export function Connections() {
             const setor = vendoStartup ? startup?.sector : investidor?.sectorInterest;
             const estagio = vendoStartup ? startup?.stage : investidor?.stageInterest;
             const avatar = vendoStartup ? startup?.logoUrl : null;
+            const alvoUsuarioId = vendoStartup ? startup?.user?.id : investidor?.user?.id;
             const tags = vendoStartup
               ? [
                   startup?.sector,
@@ -590,6 +595,15 @@ export function Connections() {
                     <button type="button" className="btn-secondary" onClick={() => setComparando(match)}>
                       Comparar perfis
                     </button>
+                    {alvoUsuarioId ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => setDenunciando({ userId: alvoUsuarioId, nome })}
+                      >
+                        Denunciar
+                      </button>
+                    ) : null}
                     {podeAceitar ? (
                       <button
                         type="button"
@@ -607,6 +621,16 @@ export function Connections() {
           })}
         </ul>
       )}
+
+      <ReportModal
+        open={Boolean(denunciando)}
+        onClose={() => setDenunciando(null)}
+        targetUserId={denunciando?.userId}
+        targetName={denunciando?.nome}
+        onCreated={() => {
+          void refreshUnread();
+        }}
+      />
 
       <ProfileModal
         open={Boolean(selecionado)}

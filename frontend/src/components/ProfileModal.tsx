@@ -388,6 +388,23 @@ export function ProfileModal({
                   <Campo rotulo="Estágio">{startup.profile.stage || 'Não informado'}</Campo>
                   <Campo rotulo="Localização">{local(startup.profile.city, startup.profile.state)}</Campo>
                   <Campo rotulo="Fundação">{formatarData(startup.profile.foundedAt)}</Campo>
+                  <Campo rotulo="Modelo de negócio">{startup.profile.businessModel || 'Não informado'}</Campo>
+                  <Campo rotulo="Tamanho do time">
+                    {startup.profile.teamSize ? `${startup.profile.teamSize} pessoa(s)` : 'Não informado'}
+                  </Campo>
+                  <Campo rotulo="Receita ou tração">{startup.profile.revenue || 'Não informado'}</Campo>
+                  <Campo rotulo="Contato">
+                    {startup.profile.contactEmail || startup.profile.phone ? (
+                      <span className="space-y-1">
+                        {startup.profile.contactEmail ? (
+                          <span className="block">{startup.profile.contactEmail}</span>
+                        ) : null}
+                        {startup.profile.phone ? <span className="block">{startup.profile.phone}</span> : null}
+                      </span>
+                    ) : (
+                      'Não informado'
+                    )}
+                  </Campo>
                 </div>
 
                 <Bloco titulo="O que a startup precisa">
@@ -417,7 +434,19 @@ export function ProfileModal({
                       Assistir ao pitch
                     </a>
                   ) : null}
-                  {!urlExterna(startup.profile.website) && !urlExterna(startup.profile.pitchUrl) ? (
+                  {urlExterna(startup.profile.linkedin) ? (
+                    <a
+                      className="link"
+                      href={urlExterna(startup.profile.linkedin) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      LinkedIn
+                    </a>
+                  ) : null}
+                  {!urlExterna(startup.profile.website) &&
+                  !urlExterna(startup.profile.pitchUrl) &&
+                  !urlExterna(startup.profile.linkedin) ? (
                     <TextoVazio>Nenhum link público cadastrado.</TextoVazio>
                   ) : null}
                 </div>
@@ -484,7 +513,7 @@ export function ProfileModal({
               <div className="space-y-5" role="tabpanel">
                 <Bloco titulo="Tese de investimento">
                   <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
-                    {investidor.profile.bio || 'Tese ainda não detalhada.'}
+                    {investidor.profile.investmentThesis || investidor.profile.bio || 'Tese ainda não detalhada.'}
                   </p>
                 </Bloco>
 
@@ -495,13 +524,74 @@ export function ProfileModal({
                     {faixaDeTicket(investidor.profile.ticketMin, investidor.profile.ticketMax)}
                   </Campo>
                   <Campo rotulo="Base">{local(investidor.profile.city, investidor.profile.state)}</Campo>
+                  <Campo rotulo="Tipo de investidor">{investidor.profile.investorType || 'Não informado'}</Campo>
+                  <Campo rotulo="Geografia preferida">{investidor.profile.preferredGeography || 'Não informado'}</Campo>
+                  <Campo rotulo="Contato">
+                    {investidor.profile.contactEmail || investidor.profile.phone ? (
+                      <span className="space-y-1">
+                        {investidor.profile.contactEmail ? (
+                          <span className="block">{investidor.profile.contactEmail}</span>
+                        ) : null}
+                        {investidor.profile.phone ? <span className="block">{investidor.profile.phone}</span> : null}
+                      </span>
+                    ) : (
+                      'Não informado'
+                    )}
+                  </Campo>
+                  <Campo rotulo="Empresa">{investidor.profile.companyName || 'Não informado'}</Campo>
                 </div>
 
-                {investidor.profile.companyName ? (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Investidor associado a {investidor.profile.companyName}.
+                <Bloco titulo="Experiência">
+                  <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
+                    {investidor.profile.experience || 'Experiência ainda não informada.'}
                   </p>
+                </Bloco>
+
+                {investidor.profile.bio && investidor.profile.investmentThesis ? (
+                  <Bloco titulo="Sobre o investidor">
+                    <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
+                      {investidor.profile.bio}
+                    </p>
+                  </Bloco>
                 ) : null}
+
+                <div className="flex flex-wrap gap-4 border-t border-slate-100 pt-4 dark:border-noite-700">
+                  {urlExterna(investidor.profile.website) ? (
+                    <a
+                      className="link"
+                      href={urlExterna(investidor.profile.website) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Site
+                    </a>
+                  ) : null}
+                  {urlExterna(investidor.profile.linkedin) ? (
+                    <a
+                      className="link"
+                      href={urlExterna(investidor.profile.linkedin) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      LinkedIn
+                    </a>
+                  ) : null}
+                  {urlExterna(investidor.profile.portfolioUrl) ? (
+                    <a
+                      className="link"
+                      href={urlExterna(investidor.profile.portfolioUrl) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Portfólio
+                    </a>
+                  ) : null}
+                  {!urlExterna(investidor.profile.website) &&
+                  !urlExterna(investidor.profile.linkedin) &&
+                  !urlExterna(investidor.profile.portfolioUrl) ? (
+                    <TextoVazio>Nenhum link público cadastrado.</TextoVazio>
+                  ) : null}
+                </div>
               </div>
             ) : (
               <div className="space-y-5" role="tabpanel">

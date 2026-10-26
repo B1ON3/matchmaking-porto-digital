@@ -41,7 +41,7 @@ export function AgendaProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async () => {
-    if (!user) {
+    if (!user || user.role === 'ADMIN') {
       setUpcomingCount(0);
       return;
     }

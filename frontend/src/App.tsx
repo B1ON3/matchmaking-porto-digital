@@ -13,6 +13,7 @@ import { Profile } from './pages/Profile';
 import { Messages } from './pages/Messages';
 import { Appointments } from './pages/Appointments';
 import { Moderation } from './pages/Moderation';
+import { Tickets } from './pages/Tickets';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { PrivacyCenter } from './pages/PrivacyCenter';
 import type { UserRole } from './types';
@@ -101,6 +102,14 @@ export default function App() {
         element={
           <Protegida>
             <Appointments />
+          </Protegida>
+        }
+      />
+      <Route
+        path="/chamados"
+        element={
+          <Protegida>
+            <Tickets />
           </Protegida>
         }
       />

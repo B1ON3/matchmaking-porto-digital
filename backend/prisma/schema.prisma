@@ -20,6 +20,9 @@ model User {
   suspendedAt      DateTime?
   moderationReason String?
   deletedAt        DateTime?
+  trustStatus      TrustStatus          @default(NAO_AVALIADO)
+  trustReason      String?
+  trustUpdatedAt   DateTime?
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   appointmentsMade Appointment[]        @relation("AppointmentCreator")
@@ -30,9 +33,14 @@ model User {
   sentMessages     Message[]            @relation("MessageSender")
   startupProfile   StartupProfile?
   passwordResets   PasswordResetToken[]
+  ticketsReported  Ticket[]             @relation("TicketReporter")
+  ticketsTargeted  Ticket[]             @relation("TicketTarget")
+  ticketMessages   TicketMessage[]
+  ticketActions    TicketAction[]
 
   @@index([status])
   @@index([lastLoginAt])
+  @@index([trustStatus])
   @@map("users")
 }
 
@@ -69,25 +77,31 @@ model PasswordResetToken {
 }
 
 model StartupProfile {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  companyName String
-  sector      String
-  description String
-  stage       String
-  city        String
-  state       String    @default("PE")
-  website     String?
-  foundedAt   DateTime?
-  needs       String?
-  pitchUrl    String?
-  logoUrl     String?
-  hiddenAt    DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  matches     Match[]
-  projects    Project[]
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  companyName   String
+  sector        String
+  description   String
+  stage         String
+  city          String
+  state         String    @default("PE")
+  website       String?
+  foundedAt     DateTime?
+  needs         String?
+  pitchUrl      String?
+  logoUrl       String?
+  businessModel String?
+  teamSize      Int?
+  revenue       String?
+  linkedin      String?
+  contactEmail  String?
+  phone         String?
+  hiddenAt      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  matches       Match[]
+  projects      Project[]
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([sector])
   @@index([stage])
@@ -110,21 +124,30 @@ model Project {
 }
 
 model InvestorProfile {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  companyName    String?
-  sectorInterest String
-  stageInterest  String
-  ticketMin      Int      @default(0)
-  ticketMax      Int      @default(0)
-  city           String?
-  state          String   @default("PE")
-  bio            String?
-  hiddenAt       DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  matches        Match[]
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  companyName        String?
+  sectorInterest     String
+  stageInterest      String
+  ticketMin          Int       @default(0)
+  ticketMax          Int       @default(0)
+  city               String?
+  state              String    @default("PE")
+  bio                String?
+  investorType       String?
+  website            String?
+  linkedin           String?
+  investmentThesis   String?
+  preferredGeography String?
+  portfolioUrl       String?
+  contactEmail       String?
+  phone              String?
+  experience         String?
+  hiddenAt           DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches            Match[]
 
   @@index([state])
   @@index([hiddenAt])
@@ -167,17 +190,17 @@ model Message {
 }
 
 model Appointment {
-  id          String            @id @default(uuid())
-  title       String
+  id              String            @id @default(uuid())
+  title           String
   description     String?
   scheduledAt     DateTime
   durationMinutes Int               @default(60)
   status          AppointmentStatus @default(AGENDADO)
   createdById     String
-  matchId     String?
-  createdAt   DateTime          @default(now())
-  createdBy   User              @relation("AppointmentCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  match       Match?            @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  matchId         String?
+  createdAt       DateTime          @default(now())
+  createdBy       User              @relation("AppointmentCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  match           Match?            @relation(fields: [matchId], references: [id], onDelete: SetNull)
 
   @@index([scheduledAt])
   @@index([scheduledAt, durationMinutes])
@@ -201,6 +224,109 @@ model AuditLog {
   @@index([entity])
   @@index([userId])
   @@map("audit_logs")
+}
+
+// help desk: uma denuncia ou pedido de suporte abre um chamado.
+// o alvo so entra no contexto do admin depois que o chamado existe.
+model Ticket {
+  id           String          @id @default(uuid())
+  protocol     String          @unique
+  category     TicketCategory
+  subject      String
+  description  String
+  status       TicketStatus    @default(ABERTO)
+  priority     TicketPriority  @default(NORMAL)
+  resolution   String?
+  reporterId   String
+  targetUserId String?
+  resolvedAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  reporter     User            @relation("TicketReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetUser   User?           @relation("TicketTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  messages     TicketMessage[]
+  actions      TicketAction[]
+
+  @@index([status, createdAt])
+  @@index([reporterId, createdAt])
+  @@index([targetUserId])
+  @@map("tickets")
+}
+
+// conversa do chamado: somente quem reportou e a administracao participam
+model TicketMessage {
+  id        String    @id @default(uuid())
+  ticketId  String
+  senderId  String
+  content   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender    User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@index([senderId, readAt])
+  @@map("ticket_messages")
+}
+
+// trilha das decisoes administrativas tomadas dentro de um chamado
+model TicketAction {
+  id        String           @id @default(uuid())
+  ticketId  String
+  adminId   String
+  action    TicketActionType
+  notes     String?
+  createdAt DateTime         @default(now())
+  ticket    Ticket           @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  admin     User             @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@map("ticket_actions")
+}
+
+enum TicketCategory {
+  GOLPE
+  PERFIL_FALSO
+  ASSEDIO
+  SPAM
+  DADOS_INCORRETOS
+  SUPORTE
+  OUTRO
+}
+
+enum TicketStatus {
+  ABERTO
+  EM_ANALISE
+  AGUARDANDO_USUARIO
+  RESOLVIDO
+  ARQUIVADO
+}
+
+enum TicketPriority {
+  BAIXA
+  NORMAL
+  ALTA
+  URGENTE
+}
+
+enum TicketActionType {
+  ACESSO_AUTORIZADO
+  OBSERVACAO
+  USUARIO_SUSPENSO
+  USUARIO_REATIVADO
+  PERFIL_OCULTADO
+  PERFIL_RESTAURADO
+  GOLPE_CONFIRMADO
+  GOLPE_DESCARTADO
+  SUSPEITA_MARCADA
+  SUSPEITA_REMOVIDA
+}
+
+enum TrustStatus {
+  NAO_AVALIADO
+  CONFIAVEL
+  SUSPEITO
+  GOLPE
 }
 
 enum UserRole {

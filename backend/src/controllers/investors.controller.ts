@@ -6,6 +6,7 @@ import { generateToken } from '../services/token.service';
 import { hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
 import { emailSchema } from '../utils/email';
+import { emailOpcional, textoOpcional, urlOpcional } from '../utils/zod-fields';
 
 const investorSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
@@ -20,6 +21,15 @@ const investorSchema = z.object({
   city: z.string().optional(),
   state: z.string().length(2, 'use a sigla do estado, ex: PE'),
   bio: z.string().optional(),
+  investorType: textoOpcional(80),
+  website: urlOpcional(),
+  linkedin: urlOpcional(),
+  investmentThesis: textoOpcional(1000),
+  preferredGeography: textoOpcional(200),
+  portfolioUrl: urlOpcional(),
+  contactEmail: emailOpcional(),
+  phone: textoOpcional(40),
+  experience: textoOpcional(1000),
 });
 
 const updateSchema = investorSchema.partial().omit({ email: true, password: true, role: true });

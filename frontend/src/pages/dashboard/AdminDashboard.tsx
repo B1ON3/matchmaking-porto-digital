@@ -2,13 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Alert } from '../../components/Alert';
-import { ProgressRing } from '../../components/ProgressRing';
 import { SectionHeader } from '../../components/SectionHeader';
 import { Skeleton } from '../../components/Skeleton';
 import { StatCard } from '../../components/StatCard';
 import { adminService } from '../../services';
 import { extractErrorMessage } from '../../services/api';
-import type { AdminOverview, MatchStatus } from '../../types';
+import type { AdminOverview, MatchStatus, TicketStatus } from '../../types';
 
 const ROTULO_STATUS: Record<MatchStatus, string> = {
   PENDENTE: 'Pendentes',
@@ -22,10 +21,12 @@ const COR_STATUS: Record<MatchStatus, string> = {
   RECUSADO: 'bg-rose-400',
 };
 
-const ROTULO_STATUS_BADGE: Record<MatchStatus, string> = {
-  PENDENTE: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200',
-  ACEITO: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200',
-  RECUSADO: 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-200',
+const ROTULO_CHAMADO: Record<TicketStatus, string> = {
+  ABERTO: 'Abertos',
+  EM_ANALISE: 'Em análise',
+  AGUARDANDO_USUARIO: 'Aguardando usuário',
+  RESOLVIDO: 'Resolvidos',
+  ARQUIVADO: 'Arquivados',
 };
 
 function formatarDataHora(valor: string): string {
@@ -194,6 +195,60 @@ export function AdminDashboard() {
         <StatCard label="Reuniões" value={overview.totals.appointments} hint="agendamentos registrados" />
       </div>
 
+      <section className="card space-y-5">
+        <SectionHeader
+          title="Chamados e denúncias"
+          description="O acesso a conexões e reuniões de outras pessoas só acontece a partir de um chamado aberto."
+          action={
+            <Link to="/chamados" className="link">
+              Abrir help desk
+            </Link>
+          }
+        />
+
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {(Object.keys(ROTULO_CHAMADO) as TicketStatus[]).map((status) => (
+            <div key={status} className="rounded-xl border border-slate-200 px-4 py-3 dark:border-noite-700">
+              <p className="text-xs text-slate-500 dark:text-slate-400">{ROTULO_CHAMADO[status]}</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-areia-100">
+                {overview.tickets.byStatus[status] ?? 0}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {overview.recentTickets.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-300">Nenhum chamado registrado ainda.</p>
+        ) : (
+          <ul className="divide-y divide-slate-200 dark:divide-noite-700">
+            {overview.recentTickets.map((chamado) => (
+              <li key={chamado.id} className="flex flex-wrap items-baseline justify-between gap-2 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{chamado.subject}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {chamado.protocol} · {chamado.reporter?.name ?? 'Usuário'}
+                    {chamado.targetUser ? ` → ${chamado.targetUser.name}` : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {chamado.naoLidas ? (
+                    <span className="badge bg-barro-100 text-barro-800 dark:bg-barro-900/40 dark:text-barro-200">
+                      {chamado.naoLidas} nova(s)
+                    </span>
+                  ) : null}
+                  <span className="badge bg-slate-100 text-slate-600 dark:bg-noite-700 dark:text-slate-300">
+                    {ROTULO_CHAMADO[chamado.status]}
+                  </span>
+                  <Link to="/chamados" className="link text-xs">
+                    Analisar
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card space-y-5">
           <SectionHeader
@@ -279,38 +334,25 @@ export function AdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card space-y-5">
           <SectionHeader
-            title="Conexões em destaque"
-            description="Os matches com maior afinidade no ecossistema."
-            action={
-              <Link to="/conexoes" className="link">
-                Ver conexões
-              </Link>
-            }
+            title="Privacidade por padrão"
+            description="O painel mostra apenas números agregados do ecossistema."
           />
 
-          {overview.topMatches.length === 0 ? (
-            <p className="text-sm text-slate-500 dark:text-slate-300">Ainda não há conexões para destacar.</p>
-          ) : (
-            <ul className="space-y-3">
-              {overview.topMatches.map((match) => (
-                <li
-                  key={match.id}
-                  className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 dark:border-noite-700"
-                >
-                  <ProgressRing value={match.score} size={50} stroke={6} />
+          <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+            <li className="rounded-xl border border-slate-200 p-3 dark:border-noite-700">
+              Conexões, mensagens e reuniões de uma pessoa só ficam visíveis dentro do chamado em que ela é denunciada.
+            </li>
+            <li className="rounded-xl border border-slate-200 p-3 dark:border-noite-700">
+              Cada acesso ao contexto é registrado na auditoria com administrador, chamado e horário.
+            </li>
+            <li className="rounded-xl border border-slate-200 p-3 dark:border-noite-700">
+              Suspensões, ocultações e mudanças de reputação exigem motivo e ficam na trilha do chamado.
+            </li>
+          </ul>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-areia-100">{match.startup}</p>
-                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{match.investor}</p>
-                  </div>
-
-                  <span className={`badge shrink-0 ${ROTULO_STATUS_BADGE[match.status]}`}>
-                    {ROTULO_STATUS[match.status]}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <Link to="/chamados" className="btn-secondary">
+            Ir para os chamados
+          </Link>
         </section>
 
         <section className="card space-y-5">

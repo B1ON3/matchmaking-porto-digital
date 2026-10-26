@@ -10,6 +10,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (dados: Record<string, unknown>) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<User | null>;
   isStartup: boolean;
   isInvestor: boolean;
   isMentor: boolean;
@@ -83,6 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    if (!getToken()) {
+      setUser(null);
+      return null;
+    }
+
+    const usuario = await authService.me();
+    setUser(usuario);
+    return usuario;
+  }, []);
+
   const hasRole = useCallback((...perfis: UserRole[]) => Boolean(user && perfis.includes(user.role)), [user]);
 
   const valor = useMemo<AuthContextValue>(
@@ -92,13 +104,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      refreshUser,
       isStartup: user?.role === 'STARTUP',
       isInvestor: user?.role === 'INVESTOR',
       isMentor: user?.role === 'MENTOR',
       isAdmin: user?.role === 'ADMIN',
       hasRole,
     }),
-    [user, loading, login, register, logout, hasRole],
+    [user, loading, login, register, logout, refreshUser, hasRole],
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;

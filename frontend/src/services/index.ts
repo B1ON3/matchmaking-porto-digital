@@ -2,6 +2,7 @@ import { api } from './api';
 import type {
   AdminMetrics,
   AdminOverview,
+  AdminTicketsPage,
   AdminUsersPage,
   Appointment,
   AppointmentConflictPreview,
@@ -17,6 +18,12 @@ import type {
   Project,
   ProjectStatus,
   StartupInsights,
+  Ticket,
+  TicketActionType,
+  TicketCategory,
+  TicketPriority,
+  TicketStatus,
+  TicketSummary,
   User,
 } from '../types';
 
@@ -252,6 +259,74 @@ export const adminService = {
     const nome = /filename="([^"]+)"/.exec(disposicao)?.[1] ?? 'laco-metricas.csv';
 
     return { blob: resposta.data, filename: nome };
+  },
+};
+
+export const ticketService = {
+  async create(dados: {
+    categoria: TicketCategory;
+    assunto: string;
+    descricao: string;
+    alvoId?: string;
+    prioridade?: TicketPriority;
+  }) {
+    const { data } = await api.post<Ticket>('/v1/tickets', dados);
+    return data;
+  },
+
+  async listMine() {
+    const { data } = await api.get<TicketSummary[]>('/v1/tickets');
+    return data;
+  },
+
+  async unreadCount() {
+    const { data } = await api.get<{ total: number }>('/v1/tickets/nao-lidos');
+    return data;
+  },
+
+  async get(id: string) {
+    const { data } = await api.get<Ticket>(`/v1/tickets/${id}`);
+    return data;
+  },
+
+  async sendMessage(id: string, conteudo: string) {
+    const { data } = await api.post<Ticket['messages'][number]>(`/v1/tickets/${id}/messages`, { conteudo });
+    return data;
+  },
+
+  async markRead(id: string) {
+    const { data } = await api.post<{ updated: number }>(`/v1/tickets/${id}/read`);
+    return data;
+  },
+
+  async listAdmin(params?: Record<string, string | number>) {
+    const { data } = await api.get<AdminTicketsPage>('/v1/admin/tickets', { params });
+    return data;
+  },
+
+  async getAdmin(id: string) {
+    const { data } = await api.get<Ticket>(`/v1/admin/tickets/${id}`);
+    return data;
+  },
+
+  async sendAdminMessage(id: string, conteudo: string) {
+    const { data } = await api.post<Ticket['messages'][number]>(`/v1/admin/tickets/${id}/messages`, {
+      conteudo,
+    });
+    return data;
+  },
+
+  async updateStatus(id: string, status: TicketStatus, resolucao?: string) {
+    const { data } = await api.patch<Ticket>(`/v1/admin/tickets/${id}/status`, {
+      status,
+      ...(resolucao ? { resolucao } : {}),
+    });
+    return data;
+  },
+
+  async executeAction(id: string, dados: { acao: TicketActionType; motivo: string; observacao?: string }) {
+    const { data } = await api.post<Ticket>(`/v1/admin/tickets/${id}/actions`, dados);
+    return data;
   },
 };
 

@@ -8,9 +8,14 @@ export const investorRoutes = Router();
 
 investorRoutes.post('/', create);
 investorRoutes.get('/', list);
-investorRoutes.get('/:id/insights', authenticate, investorInsights);
+investorRoutes.get(
+  '/:id/insights',
+  authenticate,
+  authorize(UserRole.INVESTOR, UserRole.STARTUP, UserRole.MENTOR),
+  investorInsights,
+);
 investorRoutes.get('/:id', show);
 
 investorRoutes.use(authenticate);
-investorRoutes.put('/:id', authorize(UserRole.INVESTOR, UserRole.ADMIN), update);
-investorRoutes.delete('/:id', authorize(UserRole.INVESTOR, UserRole.ADMIN), remove);
+investorRoutes.put('/:id', authorize(UserRole.INVESTOR, UserRole.MENTOR), update);
+investorRoutes.delete('/:id', authorize(UserRole.INVESTOR, UserRole.MENTOR), remove);
