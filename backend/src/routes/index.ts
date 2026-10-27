@@ -16,12 +16,15 @@ import { meVerificationRoutes } from './verification.routes';
 
 export const routes = Router();
 
+const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null;
+
 // sem essa rota, abrir a url base da api no navegador devolvia 404 e nao
 // dizia nada do que existia ali
 routes.get('/', (_req: Request, res: Response) => {
   res.json({
     servico: 'laco-api',
     version: '0.1.0',
+    commit,
     descricao: 'API REST de matchmaking entre startups e investidores anjo do Porto Digital',
     status: 'ok',
     health: '/api/health',
@@ -57,6 +60,7 @@ routes.get('/health', async (_req: Request, res: Response) => {
     status: 'ok',
     servico: 'laco-api',
     version: '0.1.0',
+    commit,
     banco: database,
     criptografia: statusDoKeyring(),
     timestamp: new Date().toISOString(),

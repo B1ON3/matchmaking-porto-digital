@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { UserRole, UserStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
-import { verifyToken } from '../services/token.service';
+import { isTokenError, verifyToken } from '../services/token.service';
 import { HttpError } from '../utils/http-error';
 
 declare global {
@@ -57,7 +57,14 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       return next(erro);
     }
 
-    return next(HttpError.unauthorized('Token expirado ou invalido'));
+    if (isTokenError(erro)) {
+      return next(HttpError.unauthorized('Token expirado ou invalido'));
+    }
+
+    // erro de infraestrutura (banco fora, pool esgotado, etc.) segue para o
+    // error handler; transformar em 401 faria o frontend apagar o token e
+    // derrubar a sessao de quem esta logado
+    return next(erro);
   }
 }
 

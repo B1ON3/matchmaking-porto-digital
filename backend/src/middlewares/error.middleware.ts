@@ -4,6 +4,17 @@ import { Prisma } from '@prisma/client';
 import { HttpError } from '../utils/http-error';
 import { EncryptionError } from '../services/encryption.service';
 
+const TRANSIENT_DATABASE_CODES = new Set(['P1001', 'P1002', 'P1008', 'P1017', 'P2024']);
+
+function bancoIndisponivel(res: Response) {
+  res.setHeader('Retry-After', '5');
+
+  return res.status(503).json({
+    error: 'Servico temporariamente indisponivel. Tente de novo em instantes.',
+    codigo: 'BANCO_INDISPONIVEL',
+  });
+}
+
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({
     error: 'Rota nao encontrada',
@@ -46,6 +57,16 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     if (err.code === 'P2025') {
       return res.status(404).json({ error: 'Recurso nao encontrado' });
     }
+
+    // pool esgotado / conexao perdida com o banco: nao e erro do cliente
+    if (TRANSIENT_DATABASE_CODES.has(err.code)) {
+      return bancoIndisponivel(res);
+    }
+  }
+
+  // falha de inicializacao/conexao do Prisma (banco fora, pooler recusando)
+  if (err instanceof Prisma.PrismaClientInitializationError) {
+    return bancoIndisponivel(res);
   }
 
   // erros do body-parser (json malformado, payload grande) chegam aqui com
