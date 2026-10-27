@@ -12,6 +12,7 @@ import { auditRoutes } from './audit.routes';
 import { adminRoutes } from './admin.routes';
 import { mePrivacyRoutes, privacyRoutes } from './privacy.routes';
 import { ticketRoutes } from './tickets.routes';
+import { meVerificationRoutes } from './verification.routes';
 
 export const routes = Router();
 
@@ -36,6 +37,7 @@ routes.get('/', (_req: Request, res: Response) => {
       chamados: '/api/v1/tickets',
       privacidade: '/api/v1/privacy/policy',
       minhaPrivacidade: '/api/v1/me/privacy',
+      seloDePerfil: '/api/v1/me/verification',
     },
     autenticacao: 'Bearer token em /api/v1/auth/login. As rotas marcadas como privadas exigem o header Authorization.',
   });
@@ -73,3 +75,4 @@ routes.use('/v1/admin', adminRoutes);
 routes.use('/v1/tickets', ticketRoutes);
 routes.use('/v1/privacy', privacyRoutes);
 routes.use('/v1/me/privacy', mePrivacyRoutes);
+routes.use('/v1/me/verification', meVerificationRoutes);

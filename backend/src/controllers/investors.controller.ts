@@ -6,7 +6,7 @@ import { generateToken } from '../services/token.service';
 import { hashPassword } from '../utils/password';
 import { HttpError } from '../utils/http-error';
 import { emailSchema } from '../utils/email';
-import { emailOpcional, textoOpcional, urlOpcional } from '../utils/zod-fields';
+import { emailOpcional, inteiroOpcional, textoOpcional, urlOpcional } from '../utils/zod-fields';
 
 const investorSchema = z.object({
   name: z.string().min(3, 'nome muito curto'),
@@ -30,6 +30,13 @@ const investorSchema = z.object({
   contactEmail: emailOpcional(),
   phone: textoOpcional(40),
   experience: textoOpcional(1000),
+  document: textoOpcional(40),
+  instagram: textoOpcional(120),
+  dealsPerYear: inteiroOpcional(0, 1000),
+  horizon: textoOpcional(120),
+  leadsRound: z.boolean().optional(),
+  boardSeat: z.boolean().optional(),
+  valueAdd: textoOpcional(1200),
 });
 
 const updateSchema = investorSchema.partial().omit({ email: true, password: true, role: true });
@@ -94,7 +101,7 @@ export async function list(req: Request, res: Response) {
   const investors = await prisma.investorProfile.findMany({
     where,
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, verifiedAt: true } },
       _count: { select: { matches: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -113,7 +120,9 @@ export async function show(req: Request, res: Response) {
 
   const investor = await prisma.investorProfile.findUnique({
     where: { id },
-    include: { user: { select: { id: true, name: true, email: true, createdAt: true } } },
+    include: {
+      user: { select: { id: true, name: true, email: true, createdAt: true, verifiedAt: true } },
+    },
   });
 
   if (!investor) {

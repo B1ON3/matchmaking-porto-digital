@@ -10,37 +10,41 @@ datasource db {
 }
 
 model User {
-  id               String               @id @default(uuid())
-  name             String
-  email            String               @unique
-  passwordHash     String
-  role             UserRole             @default(STARTUP)
-  status           UserStatus           @default(ATIVO)
-  lastLoginAt      DateTime?
-  suspendedAt      DateTime?
-  moderationReason String?
-  deletedAt        DateTime?
-  trustStatus      TrustStatus          @default(NAO_AVALIADO)
-  trustReason      String?
-  trustUpdatedAt   DateTime?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  appointmentsMade Appointment[]        @relation("AppointmentCreator")
-  auditLogs        AuditLog[]
-  consents         ConsentRecord[]
-  investorProfile  InvestorProfile?
-  receivedMessages Message[]            @relation("MessageRecipient")
-  sentMessages     Message[]            @relation("MessageSender")
-  startupProfile   StartupProfile?
-  passwordResets   PasswordResetToken[]
-  ticketsReported  Ticket[]             @relation("TicketReporter")
-  ticketsTargeted  Ticket[]             @relation("TicketTarget")
-  ticketMessages   TicketMessage[]
-  ticketActions    TicketAction[]
+  id                    String                @id @default(uuid())
+  name                  String
+  email                 String                @unique
+  passwordHash          String
+  role                  UserRole              @default(STARTUP)
+  status                UserStatus            @default(ATIVO)
+  lastLoginAt           DateTime?
+  suspendedAt           DateTime?
+  moderationReason      String?
+  deletedAt             DateTime?
+  trustStatus           TrustStatus           @default(NAO_AVALIADO)
+  trustReason           String?
+  trustUpdatedAt        DateTime?
+  verifiedAt            DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  appointmentsMade      Appointment[]         @relation("AppointmentCreator")
+  auditLogs             AuditLog[]
+  consents              ConsentRecord[]
+  investorProfile       InvestorProfile?
+  receivedMessages      Message[]             @relation("MessageRecipient")
+  sentMessages          Message[]             @relation("MessageSender")
+  startupProfile        StartupProfile?
+  passwordResets        PasswordResetToken[]
+  ticketsReported       Ticket[]              @relation("TicketReporter")
+  ticketsTargeted       Ticket[]              @relation("TicketTarget")
+  ticketMessages        TicketMessage[]
+  ticketActions         TicketAction[]
+  verifications         ProfileVerification[] @relation("VerificationOwner")
+  verificationsReviewed ProfileVerification[] @relation("VerificationReviewer")
 
   @@index([status])
   @@index([lastLoginAt])
   @@index([trustStatus])
+  @@index([verifiedAt])
   @@map("users")
 }
 
@@ -96,6 +100,16 @@ model StartupProfile {
   linkedin      String?
   contactEmail  String?
   phone         String?
+  legalName     String?
+  document      String?
+  targetMarket  String?
+  traction      String?
+  roundTarget   Int?
+  useOfFunds    String?
+  competitors   String?
+  accelerators  String?
+  awards        String?
+  instagram     String?
   hiddenAt      DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -143,6 +157,13 @@ model InvestorProfile {
   contactEmail       String?
   phone              String?
   experience         String?
+  document           String?
+  instagram          String?
+  dealsPerYear       Int?
+  horizon            String?
+  leadsRound         Boolean   @default(false)
+  boardSeat          Boolean   @default(false)
+  valueAdd           String?
   hiddenAt           DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -282,6 +303,36 @@ model TicketAction {
 
   @@index([ticketId, createdAt])
   @@map("ticket_actions")
+}
+
+// pedido de selo de verificacao: o usuario envia provas e a administracao decide
+model ProfileVerification {
+  id           String             @id @default(uuid())
+  userId       String
+  status       VerificationStatus @default(PENDENTE)
+  legalName    String?
+  document     String?
+  website      String?
+  linkedin     String?
+  pitchUrl     String?
+  evidence     String
+  extraLinks   String?
+  submittedAt  DateTime           @default(now())
+  reviewedById String?
+  reviewedAt   DateTime?
+  reviewNote   String?
+  user         User               @relation("VerificationOwner", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy   User?              @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, submittedAt])
+  @@index([userId, status])
+  @@map("profile_verifications")
+}
+
+enum VerificationStatus {
+  PENDENTE
+  APROVADA
+  RECUSADA
 }
 
 enum TicketCategory {

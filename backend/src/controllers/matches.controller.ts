@@ -36,7 +36,7 @@ export async function list(req: Request, res: Response) {
       where: { startupId: perfil.id, score: { gte: minimo } },
       include: {
         investor: {
-          include: { user: { select: { id: true, name: true, email: true } } },
+          include: { user: { select: { id: true, name: true, email: true, verifiedAt: true } } },
         },
       },
       orderBy: { score: 'desc' },
@@ -65,7 +65,7 @@ export async function list(req: Request, res: Response) {
       where: { investorId: perfil.id, score: { gte: minimo } },
       include: {
         startup: {
-          include: { user: { select: { id: true, name: true, email: true } } },
+          include: { user: { select: { id: true, name: true, email: true, verifiedAt: true } } },
         },
       },
       orderBy: { score: 'desc' },
@@ -100,8 +100,8 @@ export async function show(req: Request, res: Response) {
   const match = await prisma.match.findUnique({
     where: { id },
     include: {
-      startup: { include: { user: { select: { id: true, name: true } } } },
-      investor: { include: { user: { select: { id: true, name: true } } } },
+      startup: { include: { user: { select: { id: true, name: true, verifiedAt: true } } } },
+      investor: { include: { user: { select: { id: true, name: true, verifiedAt: true } } } },
     },
   });
 

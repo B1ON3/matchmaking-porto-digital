@@ -91,4 +91,39 @@ assert.equal(
   'sem setor, estágio, ticket ou região não há score',
 );
 
+const comBonus = calculaScore(
+  { ...startup, verificado: true },
+  {
+    sectorInterest: 'Tecnologia, Design',
+    stageInterest: 'Seed, Pre-seed',
+    ticketMin: 50000,
+    ticketMax: 300000,
+    state: 'PE',
+    verificado: true,
+  },
+);
+
+assert.equal(comBonus.details.verificacao, 10, 'dois perfis verificados somam 10 de bônus');
+assert.equal(comBonus.score, 100, 'o bônus não pode passar do teto de 100');
+
+const parcial = calculaScore(startup, {
+  sectorInterest: 'Tecnologia, Design',
+  stageInterest: 'Pre-seed',
+  ticketMin: 300000,
+  ticketMax: 500000,
+  state: 'BA',
+  verificado: true,
+});
+
+assert.equal(parcial.details.verificacao, 5, 'um perfil verificado soma 5 de bônus');
+assert.equal(parcial.score, 72, 'o bônus entra sobre a afinidade parcial');
+
+const semAfinidade = calculaScore(
+  { sector: 'Educação', stage: 'Ideação', state: 'PE', verificado: true },
+  { sectorInterest: 'Saúde', stageInterest: 'Série B', ticketMin: 0, ticketMax: 0, state: 'SP', verificado: true },
+);
+
+assert.equal(semAfinidade.score, 0, 'selo não cria conexão sem nenhuma afinidade');
+assert.equal(semAfinidade.details.verificacao, 0, 'o bônus fica zerado quando não há afinidade');
+
 console.log('matching.rules: todos os testes passaram');

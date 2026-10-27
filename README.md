@@ -115,53 +115,62 @@ docker-compose down -v            # derruba tudo e apaga o volume do banco
 
 Base: `http://localhost:5000/api` — versionada em `/v1`.
 
-| Método   | Rota                                  | Descrição                                                    | Auth            |
-| -------- | ------------------------------------- | ------------------------------------------------------------ | --------------- |
-| `GET`    | `/health`                             | Status da API e do banco                                     | não             |
-| `POST`   | `/v1/auth/register`                   | Cadastro de startup / investidor                             | não             |
-| `POST`   | `/v1/auth/login`                      | Login (devolve o JWT)                                        | não             |
-| `GET`    | `/v1/auth/me`                         | Perfil do usuário logado                                     | sim             |
-| `POST`   | `/v1/startups`                        | Cadastro de startup                                          | não             |
-| `GET`    | `/v1/startups`                        | Lista com filtros (`setor`, `estagio`, `cidade`)             | não             |
-| `GET`    | `/v1/startups/:id`                    | Detalhe de uma startup                                       | não             |
-| `PUT`    | `/v1/startups/:id`                    | Edita perfil                                                 | dono            |
-| `DELETE` | `/v1/startups/:id`                    | Remove perfil                                                | dono            |
-| `POST`   | `/v1/investors`                       | Cadastro de investidor anjo                                  | não             |
-| `GET`    | `/v1/investors`                       | Lista com filtros (`setor`, `estado`)                        | não             |
-| `GET`    | `/v1/investors/:id`                   | Detalhe de um investidor                                     | não             |
-| `PUT`    | `/v1/investors/:id`                   | Edita perfil                                                 | dono            |
-| `DELETE` | `/v1/investors/:id`                   | Remove perfil                                                | dono            |
-| `GET`    | `/v1/matches`                         | Matches do usuário logado, com `score`                       | sim             |
-| `GET`    | `/v1/matches/:id/compatibility`       | Matriz de compatibilidade do match                           | envolvido       |
-| `POST`   | `/v1/matches/gerar`                   | Recalcula os matches de uma startup                          | dono da startup |
-| `PUT`    | `/v1/matches/:id/status`              | Aceita / recusa uma conexão                                  | envolvido       |
-| `GET`    | `/v1/messages`                        | Lista mensagens paginadas (`conversaCom`, `before`, `limit`) | sim             |
-| `GET`    | `/v1/messages/conversas`              | Lista as conversas com contexto do match                     | sim             |
-| `GET`    | `/v1/messages/nao-lidas`              | Conta mensagens não lidas                                    | sim             |
-| `POST`   | `/v1/messages/conversas/:userId/read` | Marca a conversa como lida                                   | sim             |
-| `POST`   | `/v1/messages`                        | Envia mensagem para uma conexão válida                       | sim             |
-| `DELETE` | `/v1/messages/:id`                    | Remove mensagem enviada                                      | sim             |
-| `GET`    | `/v1/appointments`                    | Lista agendamentos                                           | sim             |
-| `GET`    | `/v1/appointments/conflicts`          | Verifica conflito de horário                                 | sim             |
-| `POST`   | `/v1/appointments`                    | Cria agendamento com duração de 30 ou 60 min                 | sim             |
-| `PUT`    | `/v1/appointments/:id/status`         | Conclui / cancela com transições válidas                     | sim             |
-| `DELETE` | `/v1/appointments/:id`                | Remove agendamento                                           | sim             |
-| `GET`    | `/v1/tickets`                         | Chamados abertos pelo usuário                                | sim             |
-| `GET`    | `/v1/tickets/nao-lidos`               | Conta respostas não lidas da administração                   | sim             |
-| `POST`   | `/v1/tickets`                         | Abre denúncia ou pedido de suporte                           | sim             |
-| `GET`    | `/v1/tickets/:id`                     | Detalhe e conversa do próprio chamado                        | autor           |
-| `POST`   | `/v1/tickets/:id/messages`            | Responde no chamado                                          | autor           |
-| `POST`   | `/v1/tickets/:id/read`                | Marca o chamado como lido                                    | autor           |
-| `GET`    | `/v1/audit`                           | Logs de auditoria                                            | **admin**       |
-| `DELETE` | `/v1/audit/:id`                       | Remove um log                                                | **admin**       |
-| `GET`    | `/v1/admin/overview`                  | Visão agregada do ecossistema                                | **admin**       |
-| `GET`    | `/v1/admin/users`                     | Consulta de pessoas e reputação                              | **admin**       |
-| `PATCH`  | `/v1/admin/users/:id/status`          | Suspende ou reativa uma conta                                | **admin**       |
-| `GET`    | `/v1/admin/tickets`                   | Fila de chamados do help desk                                | **admin**       |
-| `GET`    | `/v1/admin/tickets/:id`               | Chamado com contexto autorizado da pessoa denunciada         | **admin**       |
-| `POST`   | `/v1/admin/tickets/:id/messages`      | Resposta da administração no chamado                         | **admin**       |
-| `PATCH`  | `/v1/admin/tickets/:id/status`        | Atualiza status, resolução e histórico                       | **admin**       |
-| `POST`   | `/v1/admin/tickets/:id/actions`       | Suspensão, ocultação, reputação e observações                | **admin**       |
+| Método   | Rota                                   | Descrição                                                    | Auth            |
+| -------- | -------------------------------------- | ------------------------------------------------------------ | --------------- |
+| `GET`    | `/health`                              | Status da API e do banco                                     | não             |
+| `POST`   | `/v1/auth/register`                    | Cadastro de startup / investidor                             | não             |
+| `POST`   | `/v1/auth/login`                       | Login (devolve o JWT)                                        | não             |
+| `GET`    | `/v1/auth/me`                          | Perfil do usuário logado                                     | sim             |
+| `POST`   | `/v1/startups`                         | Cadastro de startup                                          | não             |
+| `GET`    | `/v1/startups`                         | Lista com filtros (`setor`, `estagio`, `cidade`)             | não             |
+| `GET`    | `/v1/startups/:id`                     | Detalhe de uma startup                                       | não             |
+| `PUT`    | `/v1/startups/:id`                     | Edita perfil                                                 | dono            |
+| `DELETE` | `/v1/startups/:id`                     | Remove perfil                                                | dono            |
+| `POST`   | `/v1/investors`                        | Cadastro de investidor anjo                                  | não             |
+| `GET`    | `/v1/investors`                        | Lista com filtros (`setor`, `estado`)                        | não             |
+| `GET`    | `/v1/investors/:id`                    | Detalhe de um investidor                                     | não             |
+| `PUT`    | `/v1/investors/:id`                    | Edita perfil                                                 | dono            |
+| `DELETE` | `/v1/investors/:id`                    | Remove perfil                                                | dono            |
+| `GET`    | `/v1/matches`                          | Matches do usuário logado, com `score`                       | sim             |
+| `GET`    | `/v1/matches/:id/compatibility`        | Matriz de compatibilidade do match                           | envolvido       |
+| `POST`   | `/v1/matches/gerar`                    | Recalcula os matches de uma startup                          | dono da startup |
+| `PUT`    | `/v1/matches/:id/status`               | Aceita / recusa uma conexão                                  | envolvido       |
+| `GET`    | `/v1/messages`                         | Lista mensagens paginadas (`conversaCom`, `before`, `limit`) | sim             |
+| `GET`    | `/v1/messages/conversas`               | Lista as conversas com contexto do match                     | sim             |
+| `GET`    | `/v1/messages/nao-lidas`               | Conta mensagens não lidas                                    | sim             |
+| `POST`   | `/v1/messages/conversas/:userId/read`  | Marca a conversa como lida                                   | sim             |
+| `POST`   | `/v1/messages`                         | Envia mensagem para uma conexão válida                       | sim             |
+| `DELETE` | `/v1/messages/:id`                     | Remove mensagem enviada                                      | sim             |
+| `GET`    | `/v1/appointments`                     | Lista agendamentos                                           | sim             |
+| `GET`    | `/v1/appointments/conflicts`           | Verifica conflito de horário                                 | sim             |
+| `POST`   | `/v1/appointments`                     | Cria agendamento com duração de 30 ou 60 min                 | sim             |
+| `PUT`    | `/v1/appointments/:id/status`          | Conclui / cancela com transições válidas                     | sim             |
+| `DELETE` | `/v1/appointments/:id`                 | Remove agendamento                                           | sim             |
+| `GET`    | `/v1/tickets`                          | Chamados abertos pelo usuário                                | sim             |
+| `GET`    | `/v1/tickets/nao-lidos`                | Conta respostas não lidas da administração                   | sim             |
+| `POST`   | `/v1/tickets`                          | Abre denúncia ou pedido de suporte                           | sim             |
+| `GET`    | `/v1/tickets/:id`                      | Detalhe e conversa do próprio chamado                        | autor           |
+| `POST`   | `/v1/tickets/:id/messages`             | Responde no chamado                                          | autor           |
+| `POST`   | `/v1/tickets/:id/read`                 | Marca o chamado como lido                                    | autor           |
+| `GET`    | `/v1/me/privacy`                       | Visão de privacidade, consentimentos e histórico             | sim             |
+| `POST`   | `/v1/me/privacy/consents`              | Registra ou revoga consentimento                             | sim             |
+| `GET`    | `/v1/me/privacy/export`                | Exporta os dados pessoais (JSON)                             | sim             |
+| `DELETE` | `/v1/me/privacy/account`               | Exclui a conta e anonimiza dados                             | sim             |
+| `GET`    | `/v1/me/verification`                  | Situação do selo de perfil verificado                        | sim             |
+| `POST`   | `/v1/me/verification`                  | Envia documentos e provas para receber o selo                | sim             |
+| `GET`    | `/v1/audit`                            | Logs de auditoria                                            | **admin**       |
+| `DELETE` | `/v1/audit/:id`                        | Remove um log                                                | **admin**       |
+| `GET`    | `/v1/admin/overview`                   | Visão agregada do ecossistema                                | **admin**       |
+| `GET`    | `/v1/admin/users`                      | Consulta de pessoas e reputação                              | **admin**       |
+| `PATCH`  | `/v1/admin/users/:id/status`           | Suspende ou reativa uma conta                                | **admin**       |
+| `GET`    | `/v1/admin/tickets`                    | Fila de chamados do help desk                                | **admin**       |
+| `GET`    | `/v1/admin/tickets/:id`                | Chamado com contexto autorizado da pessoa denunciada         | **admin**       |
+| `POST`   | `/v1/admin/tickets/:id/messages`       | Resposta da administração no chamado                         | **admin**       |
+| `PATCH`  | `/v1/admin/tickets/:id/status`         | Atualiza status, resolução e histórico                       | **admin**       |
+| `POST`   | `/v1/admin/tickets/:id/actions`        | Suspensão, ocultação, reputação e observações                | **admin**       |
+| `GET`    | `/v1/admin/verifications`              | Fila de pedidos de selo de perfil                            | **admin**       |
+| `GET`    | `/v1/admin/verifications/:id`          | Detalhe do pedido com provas e perfil                        | **admin**       |
+| `POST`   | `/v1/admin/verifications/:id/decision` | Aprova ou recusa o selo (motivo obrigatório)                 | **admin**       |
 
 > O administrador **não** acessa `/v1/matches`, `/v1/messages` ou `/v1/appointments` de terceiros.
 > Conexões e reuniões de uma pessoa só aparecem em `/v1/admin/tickets/:id`, a partir de uma
@@ -185,14 +194,20 @@ curl http://localhost:5000/api/v1/matches \
 ## 6. Algoritmo de Matchmaking
 
 O score é uma média ponderada de quatro critérios de afinidade
-(`backend/src/services/matching.service.ts`):
+(`backend/src/services/matching.rules.ts`):
 
-| Critério | Peso | Como é calculado                                           |
-| -------- | ---- | ---------------------------------------------------------- |
-| Setor    | 35   | o setor da startup está entre os interesses do investidor? |
-| Estágio  | 25   | o estágio da startup está entre os estágios de interesse?  |
-| Ticket   | 25   | a rodada estimada cabe na faixa `ticketMin`–`ticketMax`?   |
-| Região   | 15   | mesma UF? Se não, pelo menos os dois no Nordeste?          |
+| Critério | Peso    | Como é calculado                                           |
+| -------- | ------- | ---------------------------------------------------------- |
+| Setor    | 35      | o setor da startup está entre os interesses do investidor? |
+| Estágio  | 25      | o estágio da startup está entre os estágios de interesse?  |
+| Ticket   | 25      | a rodada estimada cabe na faixa `ticketMin`–`ticketMax`?   |
+| Região   | 15      | mesma UF? Se não, pelo menos os dois no Nordeste?          |
+| Selo     | +5/lado | perfil verificado pela administração (bônus máximo de 10)  |
+
+O selo é um bônus de confiança: quando já existe afinidade entre os dois lados,
+soma 5 pontos por perfil verificado, e o resultado final é limitado a 100. Sem
+nenhuma afinidade o selo não cria conexão artificial. A aprovação do selo
+recalcula os matches da pessoa para refletir o novo peso.
 
 A faixa de resultado vai de 0 a 100 e vem sempre acompanhada de um texto explicando **por que**
 aquele par tem aquela pontuação — o objetivo é o usuário entender o resultado, não só receber uma
@@ -342,7 +357,10 @@ Para rotacionar:
 
 **Limitação:** sem nenhuma chave válida do keyring, o conteúdo restrito é
 irrecuperável. Guarde as chaves em um cofre de segredos e nunca as commite.
-Em produção, a API não inicia se `DATA_ENCRYPTION_KEYS` ou
-`DATA_ENCRYPTION_ACTIVE_KID` estiverem ausentes ou inválidos. O Helmet aplica
+Sem `DATA_ENCRYPTION_KEYS`/`DATA_ENCRYPTION_ACTIVE_KID` a API ainda sobe e o
+`/api/health` mostra `criptografia.configurada: false`; nesse estado, rotas que
+cifram ou decifram conteúdo respondem `503 CRIPTOGRAFIA_INDISPONIVEL` (é o caso
+de `/v1/messages/conversas`). Configure o mesmo keyring do `backend/.env` na
+Vercel para reativar mensagens em produção. O Helmet aplica
 HSTS em produção, o CORS é restrito por origem e os logs HTTP registram apenas
 método, caminho sem query string, status e tempo de resposta.

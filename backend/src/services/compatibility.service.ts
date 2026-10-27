@@ -2,7 +2,7 @@ import { UserRole, type InvestorProfile, type StartupProfile } from '@prisma/cli
 import { findForCompatibility } from '../repositories/match.repository';
 import { HttpError } from '../utils/http-error';
 import type { MatchDetails } from './matching.rules';
-import { calculaScore, estimaTicketDaRodada, PESOS } from './matching.rules';
+import { BONUS_MAXIMO, calculaScore, estimaTicketDaRodada, PESOS } from './matching.rules';
 
 export type CompatibilityStatus = 'ATENDE' | 'PARCIAL' | 'NAO_ATENDE';
 export type CompatibilityDimensionKey = keyof MatchDetails;
@@ -51,7 +51,7 @@ export interface CompatibilityViewer {
 type StartupCompat = Pick<
   StartupProfile,
   'id' | 'userId' | 'companyName' | 'sector' | 'stage' | 'city' | 'state' | 'description' | 'logoUrl'
-> & { user: { name: string } };
+> & { user: { name: string; verifiedAt: Date | null } };
 
 type InvestorCompat = Pick<
   InvestorProfile,
@@ -65,16 +65,22 @@ type InvestorCompat = Pick<
   | 'city'
   | 'state'
   | 'bio'
-> & { user: { name: string } };
+> & { user: { name: string; verifiedAt: Date | null } };
 
 const LABELS: Record<CompatibilityDimensionKey, string> = {
   setor: 'Setor',
   estagio: 'Estágio',
   ticket: 'Ticket',
   regiao: 'Região',
+  verificacao: 'Perfis verificados',
 };
 
-const DIMENSOES: CompatibilityDimensionKey[] = ['setor', 'estagio', 'ticket', 'regiao'];
+const DIMENSOES: CompatibilityDimensionKey[] = ['setor', 'estagio', 'ticket', 'regiao', 'verificacao'];
+
+const PESOS_DIMENSAO: Record<CompatibilityDimensionKey, number> = {
+  ...PESOS,
+  verificacao: BONUS_MAXIMO,
+};
 
 function moeda(valor: number): string {
   return new Intl.NumberFormat('pt-BR', {
@@ -152,6 +158,18 @@ function evidenciaRegiao(startup: StartupCompat, investidor: InvestorCompat, pon
   return `Startup (${ufStartup}) e investidor (${ufInvestidor}) estão em regiões diferentes.`;
 }
 
+function evidenciaVerificacao(pontos: number): string {
+  if (pontos >= BONUS_MAXIMO) {
+    return 'Startup e investidor têm o selo de perfil verificado pela administração.';
+  }
+
+  if (pontos > 0) {
+    return 'Um dos dois perfis tem o selo de verificação; o selo soma pontos de confiança ao match.';
+  }
+
+  return 'Nenhum dos dois perfis tem o selo de verificação; verificar o perfil aumenta a pontuação.';
+}
+
 function evidencia(
   chave: CompatibilityDimensionKey,
   startup: StartupCompat,
@@ -168,6 +186,10 @@ function evidencia(
 
   if (chave === 'ticket') {
     return evidenciaTicket(startup, investidor, pontos);
+  }
+
+  if (chave === 'verificacao') {
+    return evidenciaVerificacao(pontos);
   }
 
   return evidenciaRegiao(startup, investidor, pontos);
@@ -214,9 +236,11 @@ function normalizarDetalhes(valor: unknown): MatchDetails | null {
   const detalhes = {} as MatchDetails;
 
   for (const chave of DIMENSOES) {
-    const pontos = registro[chave];
+    const bruto = registro[chave];
+    // matches antigos nao tinham a dimensao de verificacao: assume zero
+    const pontos = bruto === undefined && chave === 'verificacao' ? 0 : bruto;
 
-    if (typeof pontos !== 'number' || !Number.isFinite(pontos) || pontos < 0 || pontos > PESOS[chave]) {
+    if (typeof pontos !== 'number' || !Number.isFinite(pontos) || pontos < 0 || pontos > PESOS_DIMENSAO[chave]) {
       return null;
     }
 
@@ -237,7 +261,7 @@ export function montarMatrizCompatibilidade(entrada: {
   const { matchId, score, reason, details, startup, investor } = entrada;
 
   const dimensions = DIMENSOES.map((chave) => {
-    const weight = PESOS[chave];
+    const weight = PESOS_DIMENSAO[chave];
     const points = details[chave];
 
     return {
@@ -292,7 +316,10 @@ export async function obterCompatibilidade(matchId: string, viewer: Compatibilit
   let reason = match.reason;
 
   if (!details) {
-    const calculado = calculaScore(match.startup, match.investor);
+    const calculado = calculaScore(
+      { ...match.startup, verificado: Boolean(match.startup.user.verifiedAt) },
+      { ...match.investor, verificado: Boolean(match.investor.user.verifiedAt) },
+    );
     details = calculado.details;
     score = calculado.score;
     reason = calculado.reason;

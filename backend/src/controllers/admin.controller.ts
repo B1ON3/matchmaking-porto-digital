@@ -39,6 +39,7 @@ const selectUser = {
   trustStatus: true,
   trustReason: true,
   trustUpdatedAt: true,
+  verifiedAt: true,
   lastLoginAt: true,
   suspendedAt: true,
   moderationReason: true,

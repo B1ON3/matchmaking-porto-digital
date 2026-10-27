@@ -10,6 +10,11 @@ import {
   updateUserStatus,
 } from '../controllers/admin.controller';
 import { executeAction, listAdmin, sendAdminMessage, showAdmin, updateStatus } from '../controllers/tickets.controller';
+import {
+  decidir as decideVerification,
+  detalhar as showVerification,
+  listar as listVerifications,
+} from '../controllers/verification.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 import { auditLog } from '../middlewares/audit.middleware';
 
@@ -91,4 +96,17 @@ adminRoutes.post(
     getEntityId: (_req, res) => res.locals.auditEntityId as string | undefined,
   }),
   executeAction,
+);
+
+// selo de perfil: o usuario manda as comprovacoes e a administracao decide
+adminRoutes.get('/verifications', listVerifications);
+adminRoutes.get('/verifications/:id', showVerification);
+adminRoutes.post(
+  '/verifications/:id/decision',
+  auditLog({
+    action: 'VERIFICACAO_DECIDIDA',
+    entity: 'ProfileVerification',
+    getEntityId: (req) => req.params.id,
+  }),
+  decideVerification,
 );

@@ -29,6 +29,16 @@ const startupSchema = z.object({
   linkedin: urlOpcional(),
   contactEmail: emailOpcional(),
   phone: textoOpcional(40),
+  legalName: textoOpcional(160),
+  document: textoOpcional(40),
+  targetMarket: textoOpcional(300),
+  traction: textoOpcional(1200),
+  roundTarget: inteiroOpcional(0, 1_000_000_000),
+  useOfFunds: textoOpcional(1200),
+  competitors: textoOpcional(600),
+  accelerators: textoOpcional(400),
+  awards: textoOpcional(600),
+  instagram: textoOpcional(120),
 });
 
 const updateSchema = startupSchema.partial().omit({ email: true, password: true });
@@ -91,7 +101,7 @@ export async function list(req: Request, res: Response) {
   const startups = await prisma.startupProfile.findMany({
     where,
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, verifiedAt: true } },
       _count: { select: { matches: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -110,7 +120,9 @@ export async function show(req: Request, res: Response) {
 
   const startup = await prisma.startupProfile.findUnique({
     where: { id },
-    include: { user: { select: { id: true, name: true, email: true, createdAt: true } } },
+    include: {
+      user: { select: { id: true, name: true, email: true, createdAt: true, verifiedAt: true } },
+    },
   });
 
   if (!startup) {

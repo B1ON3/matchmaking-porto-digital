@@ -6,6 +6,7 @@ import { Alert } from '../components/Alert';
 import { Avatar } from '../components/Avatar';
 import { CompatibilityDrawer } from '../components/CompatibilityDrawer';
 import { ProfileModal } from '../components/ProfileModal';
+import { VerifiedBadge } from '../components/VerifiedBadge';
 import { ProgressRing } from '../components/ProgressRing';
 import { ReportModal } from '../components/ReportModal';
 import { Skeleton } from '../components/Skeleton';
@@ -433,6 +434,7 @@ export function Connections() {
                           <p className="truncate font-semibold text-slate-900 dark:text-areia-100">
                             {nomeStartup(startup)}
                           </p>
+                          <VerifiedBadge verifiedAt={startup?.user?.verifiedAt} />
                           <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                             {[startup?.sector, startup?.stage, lugar(startup?.city, startup?.state)]
                               .filter(Boolean)
@@ -452,6 +454,7 @@ export function Connections() {
                           <p className="truncate font-semibold text-slate-900 dark:text-areia-100">
                             {nomeInvestidor(investidor)}
                           </p>
+                          <VerifiedBadge verifiedAt={investidor?.user?.verifiedAt} />
                           <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                             {[
                               investidor?.sectorInterest,
@@ -545,6 +548,9 @@ export function Connections() {
                         <h2 className="truncate font-display text-lg font-semibold text-slate-900 dark:text-areia-100">
                           {nome}
                         </h2>
+                        <VerifiedBadge
+                          verifiedAt={vendoStartup ? startup?.user?.verifiedAt : investidor?.user?.verifiedAt}
+                        />
                         {empresa && empresa !== nome ? (
                           <p className="truncate text-xs text-slate-500 dark:text-slate-400">{empresa}</p>
                         ) : null}

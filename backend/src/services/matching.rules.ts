@@ -5,10 +5,17 @@ export const PESOS = {
   regiao: 15,
 } as const;
 
+// selo de perfil verificado pela administracao: nao e criterio de afinidade,
+// e um bonus de confianca. vale para os dois lados do match.
+export const BONUS_VERIFICADO = 5;
+export const BONUS_MAXIMO = BONUS_VERIFICADO * 2;
+export const ESCORE_MAXIMO = 100;
+
 export type StartupLike = {
   sector: string;
   stage: string;
   state: string;
+  verificado?: boolean;
 };
 
 export type InvestorLike = {
@@ -17,6 +24,7 @@ export type InvestorLike = {
   ticketMin: number;
   ticketMax: number;
   state: string;
+  verificado?: boolean;
 };
 
 export type MatchDetails = {
@@ -24,6 +32,7 @@ export type MatchDetails = {
   estagio: number;
   ticket: number;
   regiao: number;
+  verificacao: number;
 };
 
 export type MatchScore = {
@@ -169,6 +178,10 @@ export function calculaRegiao(startup: StartupLike, investor: InvestorLike): num
   return 0;
 }
 
+export function calculaVerificacao(startup: StartupLike, investor: InvestorLike): number {
+  return (startup.verificado ? BONUS_VERIFICADO : 0) + (investor.verificado ? BONUS_VERIFICADO : 0);
+}
+
 export function montaReason(score: number): string {
   if (score >= 80) {
     return 'Conexão forte: setor, estágio e ticket alinhados.';
@@ -190,14 +203,25 @@ export function montaReason(score: number): string {
 }
 
 export function calculaScore(startup: StartupLike, investor: InvestorLike): MatchScore {
+  const setor = calculaSetor(startup, investor);
+  const estagio = calculaEstagio(startup, investor);
+  const ticket = calculaTicket(startup, investor);
+  const regiao = calculaRegiao(startup, investor);
+  const base = setor + estagio + ticket + regiao;
+
+  // o selo e um bonus de confianca: so vale quando ja existe alguma afinidade,
+  // para nao criar conexoes artificiais so porque o perfil foi verificado
   const details = {
-    setor: calculaSetor(startup, investor),
-    estagio: calculaEstagio(startup, investor),
-    ticket: calculaTicket(startup, investor),
-    regiao: calculaRegiao(startup, investor),
+    setor,
+    estagio,
+    ticket,
+    regiao,
+    verificacao: base > 0 ? calculaVerificacao(startup, investor) : 0,
   };
 
-  const score = Number((details.setor + details.estagio + details.ticket + details.regiao).toFixed(1));
+  // o bonus eleva a confianca, mas nao passa de 100
+  const bruto = base + details.verificacao;
+  const score = Number(Math.min(ESCORE_MAXIMO, bruto).toFixed(1));
 
   return {
     score,

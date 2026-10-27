@@ -9,6 +9,7 @@ import { Modal } from '../components/Modal';
 import { ProgressRing } from '../components/ProgressRing';
 import { Skeleton } from '../components/Skeleton';
 import { Tabs } from '../components/Tabs';
+import { VerifiedBadge } from '../components/VerifiedBadge';
 import { investorService, startupService } from '../services';
 import { extractErrorMessage } from '../services/api';
 import type { InvestorInsights, MatchStatus, ProjectStatus, StartupInsights } from '../types';
@@ -101,6 +102,20 @@ function faixaDeTicket(minimo: number, maximo: number): string {
 
 function local(cidade?: string | null, estado?: string | null): string {
   return [cidade, estado].filter(Boolean).join(', ') || 'Local não informado';
+}
+
+function urlInstagram(valor?: string | null): string | null {
+  if (!valor) {
+    return null;
+  }
+
+  const limpo = valor.trim().replace(/^@/, '');
+
+  if (!limpo) {
+    return null;
+  }
+
+  return /^https?:\/\//i.test(limpo) ? limpo : `https://instagram.com/${limpo}`;
 }
 
 function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
@@ -337,6 +352,9 @@ export function ProfileModal({
             <div className="min-w-0 flex-1">
               <p className="eyebrow">{kind === 'startup' ? 'Startup' : 'Investidor'}</p>
               <h3 className="mt-1 font-display text-2xl font-semibold text-slate-900 dark:text-areia-100">{nome}</h3>
+              <div className="mt-2">
+                <VerifiedBadge verifiedAt={usuario?.verifiedAt} size="md" />
+              </div>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                 {kind === 'startup'
                   ? [
@@ -393,6 +411,11 @@ export function ProfileModal({
                     {startup.profile.teamSize ? `${startup.profile.teamSize} pessoa(s)` : 'Não informado'}
                   </Campo>
                   <Campo rotulo="Receita ou tração">{startup.profile.revenue || 'Não informado'}</Campo>
+                  <Campo rotulo="Razão social">{startup.profile.legalName || 'Não informada'}</Campo>
+                  <Campo rotulo="Mercado-alvo">{startup.profile.targetMarket || 'Não informado'}</Campo>
+                  <Campo rotulo="Meta da rodada">
+                    {startup.profile.roundTarget ? moeda(startup.profile.roundTarget) : 'Não informada'}
+                  </Campo>
                   <Campo rotulo="Contato">
                     {startup.profile.contactEmail || startup.profile.phone ? (
                       <span className="space-y-1">
@@ -412,6 +435,42 @@ export function ProfileModal({
                     {startup.profile.needs || 'Necessidades ainda não informadas.'}
                   </p>
                 </Bloco>
+
+                {startup.profile.traction ? (
+                  <Bloco titulo="Tração e resultados">
+                    <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
+                      {startup.profile.traction}
+                    </p>
+                  </Bloco>
+                ) : null}
+
+                {startup.profile.useOfFunds ? (
+                  <Bloco titulo="Uso dos recursos">
+                    <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
+                      {startup.profile.useOfFunds}
+                    </p>
+                  </Bloco>
+                ) : null}
+
+                {startup.profile.competitors || startup.profile.accelerators || startup.profile.awards ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {startup.profile.competitors ? (
+                      <Campo rotulo="Concorrentes">
+                        <span className="whitespace-pre-line font-normal">{startup.profile.competitors}</span>
+                      </Campo>
+                    ) : null}
+                    {startup.profile.accelerators ? (
+                      <Campo rotulo="Aceleradoras e programas">
+                        <span className="whitespace-pre-line font-normal">{startup.profile.accelerators}</span>
+                      </Campo>
+                    ) : null}
+                    {startup.profile.awards ? (
+                      <Campo rotulo="Prêmios e reconhecimentos">
+                        <span className="whitespace-pre-line font-normal">{startup.profile.awards}</span>
+                      </Campo>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <div className="flex flex-wrap gap-4 border-t border-slate-100 pt-4 dark:border-noite-700">
                   {urlExterna(startup.profile.website) ? (
@@ -444,9 +503,20 @@ export function ProfileModal({
                       LinkedIn
                     </a>
                   ) : null}
+                  {urlInstagram(startup.profile.instagram) ? (
+                    <a
+                      className="link"
+                      href={urlInstagram(startup.profile.instagram) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Instagram
+                    </a>
+                  ) : null}
                   {!urlExterna(startup.profile.website) &&
                   !urlExterna(startup.profile.pitchUrl) &&
-                  !urlExterna(startup.profile.linkedin) ? (
+                  !urlExterna(startup.profile.linkedin) &&
+                  !urlInstagram(startup.profile.instagram) ? (
                     <TextoVazio>Nenhum link público cadastrado.</TextoVazio>
                   ) : null}
                 </div>
@@ -539,7 +609,23 @@ export function ProfileModal({
                     )}
                   </Campo>
                   <Campo rotulo="Empresa">{investidor.profile.companyName || 'Não informado'}</Campo>
+                  <Campo rotulo="Horizonte">{investidor.profile.horizon || 'Não informado'}</Campo>
+                  <Campo rotulo="Investimentos por ano">{investidor.profile.dealsPerYear ?? 'Não informado'}</Campo>
+                  <Campo rotulo="Lidera rodadas">
+                    {investidor.profile.leadsRound ? 'Sim, costuma liderar' : 'Não informado'}
+                  </Campo>
+                  <Campo rotulo="Cadeira no conselho">
+                    {investidor.profile.boardSeat ? 'Sim, participa do conselho' : 'Não informado'}
+                  </Campo>
                 </div>
+
+                {investidor.profile.valueAdd ? (
+                  <Bloco titulo="Como agrega valor">
+                    <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
+                      {investidor.profile.valueAdd}
+                    </p>
+                  </Bloco>
+                ) : null}
 
                 <Bloco titulo="Experiência">
                   <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
@@ -586,9 +672,20 @@ export function ProfileModal({
                       Portfólio
                     </a>
                   ) : null}
+                  {urlInstagram(investidor.profile.instagram) ? (
+                    <a
+                      className="link"
+                      href={urlInstagram(investidor.profile.instagram) ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Instagram
+                    </a>
+                  ) : null}
                   {!urlExterna(investidor.profile.website) &&
                   !urlExterna(investidor.profile.linkedin) &&
-                  !urlExterna(investidor.profile.portfolioUrl) ? (
+                  !urlExterna(investidor.profile.portfolioUrl) &&
+                  !urlInstagram(investidor.profile.instagram) ? (
                     <TextoVazio>Nenhum link público cadastrado.</TextoVazio>
                   ) : null}
                 </div>

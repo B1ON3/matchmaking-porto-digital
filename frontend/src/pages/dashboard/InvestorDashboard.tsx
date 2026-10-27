@@ -8,6 +8,7 @@ import { ProgressRing } from '../../components/ProgressRing';
 import { SectionHeader } from '../../components/SectionHeader';
 import { Skeleton } from '../../components/Skeleton';
 import { StatCard } from '../../components/StatCard';
+import { VerifiedBadge } from '../../components/VerifiedBadge';
 import { appointmentService, investorService, matchService, messageService } from '../../services';
 import { extractErrorMessage } from '../../services/api';
 import type { Appointment, InvestorInsights, InvestorProfile, Match } from '../../types';
@@ -261,6 +262,9 @@ export function InvestorDashboard() {
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-areia-200/60">Seu painel</p>
             <h1 className="mt-2 font-display text-3xl font-semibold text-areia-50">Olá, {nome}.</h1>
+            <div className="mt-2">
+              <VerifiedBadge verifiedAt={user?.verifiedAt} />
+            </div>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-areia-200/75">
               {perfil
                 ? `Tese em ${setoresDaTese.join(', ') || 'diversos setores'} · ${estagiosDaTese.join(', ') || 'diversos estágios'} · ${faixaDeTicket(perfil)}`

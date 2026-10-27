@@ -10,6 +10,7 @@ import { ProgressRing } from '../../components/ProgressRing';
 import { SectionHeader } from '../../components/SectionHeader';
 import { Skeleton } from '../../components/Skeleton';
 import { StatCard } from '../../components/StatCard';
+import { VerifiedBadge } from '../../components/VerifiedBadge';
 import { appointmentService, matchService, messageService, startupService } from '../../services';
 import { extractErrorMessage } from '../../services/api';
 import type { Appointment, InvestorProfile, Match, MatchStatus, StartupInsights, StartupProfile } from '../../types';
@@ -294,6 +295,9 @@ export function StartupDashboard() {
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-areia-200/60">Seu painel</p>
             <h1 className="mt-2 font-display text-3xl font-semibold text-areia-50">Olá, {primeiroNome}.</h1>
+            <div className="mt-2">
+              <VerifiedBadge verifiedAt={user?.verifiedAt} />
+            </div>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-areia-200/75">
               {perfil
                 ? [perfil.companyName, perfil.sector, perfil.stage, local(perfil.city, perfil.state)]
@@ -488,6 +492,22 @@ export function StartupDashboard() {
               ) : (
                 <Link to="/perfil" className="btn-secondary">
                   Completar
+                </Link>
+              )}
+            </li>
+
+            <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 dark:border-noite-700">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-areia-100">Selo de perfil</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Perfis verificados ganham até 10 pontos extras nas conexões.
+                </p>
+              </div>
+              {user?.verifiedAt ? (
+                <VerifiedBadge verifiedAt={user.verifiedAt} />
+              ) : (
+                <Link to="/perfil#selo" className="btn-secondary">
+                  Solicitar
                 </Link>
               )}
             </li>

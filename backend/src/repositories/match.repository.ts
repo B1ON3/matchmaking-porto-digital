@@ -5,10 +5,10 @@ export async function findForCompatibility(matchId: string) {
     where: { id: matchId },
     include: {
       startup: {
-        include: { user: { select: { id: true, name: true } } },
+        include: { user: { select: { id: true, name: true, verifiedAt: true } } },
       },
       investor: {
-        include: { user: { select: { id: true, name: true } } },
+        include: { user: { select: { id: true, name: true, verifiedAt: true } } },
       },
     },
   });

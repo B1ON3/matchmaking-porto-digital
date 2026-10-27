@@ -4,6 +4,8 @@ import type {
   AdminOverview,
   AdminTicketsPage,
   AdminUsersPage,
+  AdminVerification,
+  AdminVerificationsPage,
   Appointment,
   AppointmentConflictPreview,
   AuditLog,
@@ -13,8 +15,10 @@ import type {
   MatchCompatibility,
   Message,
   MessagePage,
+  MyVerification,
   PrivacyOverview,
   PrivacyPolicy,
+  ProfileVerification,
   Project,
   ProjectStatus,
   StartupInsights,
@@ -25,6 +29,7 @@ import type {
   TicketStatus,
   TicketSummary,
   User,
+  VerificationRequestInput,
 } from '../types';
 
 interface AuthResponse {
@@ -352,6 +357,36 @@ export const projectService = {
 
   async remove(startupId: string, projectId: string) {
     await api.delete(`/v1/startups/${startupId}/projects/${projectId}`);
+  },
+};
+
+export const verificationService = {
+  async me(): Promise<MyVerification> {
+    const { data } = await api.get<MyVerification>('/v1/me/verification');
+    return data;
+  },
+
+  async request(dados: VerificationRequestInput): Promise<ProfileVerification> {
+    const { data } = await api.post<ProfileVerification>('/v1/me/verification', dados);
+    return data;
+  },
+
+  async listAdmin(params?: Record<string, string | number>): Promise<AdminVerificationsPage> {
+    const { data } = await api.get<AdminVerificationsPage>('/v1/admin/verifications', { params });
+    return data;
+  },
+
+  async getAdmin(id: string): Promise<AdminVerification> {
+    const { data } = await api.get<AdminVerification>(`/v1/admin/verifications/${id}`);
+    return data;
+  },
+
+  async decide(id: string, decisao: 'APROVAR' | 'RECUSAR', motivo: string): Promise<AdminVerification> {
+    const { data } = await api.post<AdminVerification>(`/v1/admin/verifications/${id}/decision`, {
+      decisao,
+      motivo,
+    });
+    return data;
   },
 };
 

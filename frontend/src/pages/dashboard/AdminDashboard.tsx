@@ -197,6 +197,45 @@ export function AdminDashboard() {
 
       <section className="card space-y-5">
         <SectionHeader
+          title="Selos de perfil"
+          description="Perfis verificados pela administração ganham peso extra nas conexões. Aprovar exige motivo e fica na auditoria."
+          action={
+            <Link to="/moderacao?aba=validacoes" className="link">
+              Analisar pedidos
+            </Link>
+          }
+        />
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <p className="text-xs text-amber-800 dark:text-amber-200">Em análise</p>
+            <p className="mt-1 text-xl font-semibold text-amber-900 dark:text-amber-100">
+              {overview.verifications.pending}
+            </p>
+          </div>
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+            <p className="text-xs text-emerald-800 dark:text-emerald-200">Aprovados</p>
+            <p className="mt-1 text-xl font-semibold text-emerald-900 dark:text-emerald-100">
+              {overview.verifications.approved}
+            </p>
+          </div>
+          <div className="rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 dark:border-rose-500/30 dark:bg-rose-500/10">
+            <p className="text-xs text-rose-800 dark:text-rose-200">Recusados</p>
+            <p className="mt-1 text-xl font-semibold text-rose-900 dark:text-rose-100">
+              {overview.verifications.rejected}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 px-4 py-3 dark:border-noite-700">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Perfis com selo</p>
+            <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-areia-100">
+              {overview.verifications.verifiedProfiles}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="card space-y-5">
+        <SectionHeader
           title="Chamados e denúncias"
           description="O acesso a conexões e reuniões de outras pessoas só acontece a partir de um chamado aberto."
           action={

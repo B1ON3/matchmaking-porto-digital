@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Alert } from '../components/Alert';
+import { VerificationCard } from '../components/VerificationCard';
 import { investorService, startupService } from '../services';
 import { extractErrorMessage } from '../services/api';
 
@@ -47,6 +48,7 @@ export function Profile() {
   const [form, setForm] = useState({
     name: user?.name ?? '',
     companyName: (ehStartup ? startup?.companyName : investidor?.companyName) ?? '',
+    legalName: startup?.legalName ?? '',
     city: (ehStartup ? startup?.city : investidor?.city) ?? '',
     state: (ehStartup ? startup?.state : investidor?.state) ?? 'PE',
     sector: startup?.sector ?? '',
@@ -60,6 +62,14 @@ export function Profile() {
     businessModel: startup?.businessModel ?? '',
     teamSize: startup?.teamSize ? String(startup.teamSize) : '',
     revenue: startup?.revenue ?? '',
+    targetMarket: startup?.targetMarket ?? '',
+    traction: startup?.traction ?? '',
+    roundTarget: startup?.roundTarget ? String(startup.roundTarget) : '',
+    useOfFunds: startup?.useOfFunds ?? '',
+    competitors: startup?.competitors ?? '',
+    accelerators: startup?.accelerators ?? '',
+    awards: startup?.awards ?? '',
+    instagram: (ehStartup ? startup?.instagram : investidor?.instagram) ?? '',
     linkedin: (ehStartup ? startup?.linkedin : investidor?.linkedin) ?? '',
     contactEmail: (ehStartup ? startup?.contactEmail : investidor?.contactEmail) ?? '',
     phone: (ehStartup ? startup?.phone : investidor?.phone) ?? '',
@@ -73,13 +83,22 @@ export function Profile() {
     preferredGeography: investidor?.preferredGeography ?? '',
     portfolioUrl: investidor?.portfolioUrl ?? '',
     experience: investidor?.experience ?? '',
+    dealsPerYear: investidor?.dealsPerYear ? String(investidor.dealsPerYear) : '',
+    horizon: investidor?.horizon ?? '',
+    leadsRound: investidor?.leadsRound ?? false,
+    boardSeat: investidor?.boardSeat ?? false,
+    valueAdd: investidor?.valueAdd ?? '',
   });
 
   const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
 
-  function atualizar(campo: keyof typeof form, valor: string) {
+  function atualizar(campo: Exclude<keyof typeof form, 'leadsRound' | 'boardSeat'>, valor: string) {
     setForm((atual) => ({ ...atual, [campo]: valor }));
+  }
+
+  function alternar(campo: 'leadsRound' | 'boardSeat') {
+    setForm((atual) => ({ ...atual, [campo]: !atual[campo] }));
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -92,6 +111,7 @@ export function Profile() {
         await startupService.update(startup.id, {
           name: form.name,
           companyName: form.companyName,
+          legalName: form.legalName || undefined,
           city: form.city,
           state: form.state,
           sector: form.sector,
@@ -105,6 +125,14 @@ export function Profile() {
           businessModel: form.businessModel || undefined,
           teamSize: form.teamSize ? Number(form.teamSize) : undefined,
           revenue: form.revenue || undefined,
+          targetMarket: form.targetMarket || undefined,
+          traction: form.traction || undefined,
+          roundTarget: form.roundTarget ? Number(form.roundTarget) : undefined,
+          useOfFunds: form.useOfFunds || undefined,
+          competitors: form.competitors || undefined,
+          accelerators: form.accelerators || undefined,
+          awards: form.awards || undefined,
+          instagram: form.instagram || undefined,
           linkedin: comProtocolo(form.linkedin),
           contactEmail: form.contactEmail || undefined,
           phone: form.phone || undefined,
@@ -129,6 +157,12 @@ export function Profile() {
           contactEmail: form.contactEmail || undefined,
           phone: form.phone || undefined,
           experience: form.experience || undefined,
+          instagram: form.instagram || undefined,
+          dealsPerYear: form.dealsPerYear ? Number(form.dealsPerYear) : undefined,
+          horizon: form.horizon || undefined,
+          leadsRound: form.leadsRound,
+          boardSeat: form.boardSeat,
+          valueAdd: form.valueAdd || undefined,
         });
       }
 
@@ -155,6 +189,8 @@ export function Profile() {
           conexões.
         </p>
       </div>
+
+      <VerificationCard />
 
       <form onSubmit={handleSubmit} className="card max-w-4xl space-y-7">
         {mensagem && <Alert tipo={mensagem.tipo} mensagem={mensagem.texto} />}
@@ -185,6 +221,20 @@ export function Profile() {
                 onChange={(e) => atualizar('companyName', e.target.value)}
               />
             </Campo>
+            {ehStartup ? (
+              <Campo
+                id="p-legal"
+                label="Razão social"
+                hint="Nome jurídico da empresa. Aparece no perfil público apenas se preenchido."
+              >
+                <input
+                  id="p-legal"
+                  className="input"
+                  value={form.legalName}
+                  onChange={(e) => atualizar('legalName', e.target.value)}
+                />
+              </Campo>
+            ) : null}
           </div>
         </section>
 
@@ -309,6 +359,77 @@ export function Profile() {
                   />
                 </Campo>
               </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo id="p-target" label="Mercado-alvo" hint="Quem compra e onde a startup atua.">
+                  <input
+                    id="p-target"
+                    className="input"
+                    placeholder="Ex.: operadores portuários do Nordeste"
+                    value={form.targetMarket}
+                    onChange={(e) => atualizar('targetMarket', e.target.value)}
+                  />
+                </Campo>
+                <Campo id="p-round" label="Meta da rodada (R$)">
+                  <input
+                    id="p-round"
+                    type="number"
+                    min={0}
+                    className="input"
+                    placeholder="Ex.: 1500000"
+                    value={form.roundTarget}
+                    onChange={(e) => atualizar('roundTarget', e.target.value)}
+                  />
+                </Campo>
+              </div>
+
+              <Campo id="p-traction" label="Tração e resultados" hint="Métricas, clientes, crescimento, marcos.">
+                <textarea
+                  id="p-traction"
+                  className="input min-h-[90px]"
+                  value={form.traction}
+                  onChange={(e) => atualizar('traction', e.target.value)}
+                />
+              </Campo>
+
+              <Campo id="p-usefunds" label="Uso dos recursos">
+                <textarea
+                  id="p-usefunds"
+                  className="input min-h-[90px]"
+                  placeholder="Produto, contratações, expansão comercial..."
+                  value={form.useOfFunds}
+                  onChange={(e) => atualizar('useOfFunds', e.target.value)}
+                />
+              </Campo>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo id="p-competitors" label="Concorrentes">
+                  <textarea
+                    id="p-competitors"
+                    className="input min-h-[80px]"
+                    value={form.competitors}
+                    onChange={(e) => atualizar('competitors', e.target.value)}
+                  />
+                </Campo>
+                <Campo id="p-accelerators" label="Aceleradoras e programas">
+                  <textarea
+                    id="p-accelerators"
+                    className="input min-h-[80px]"
+                    placeholder="Ex.: Porto Digital, Startup PE..."
+                    value={form.accelerators}
+                    onChange={(e) => atualizar('accelerators', e.target.value)}
+                  />
+                </Campo>
+              </div>
+
+              <Campo id="p-awards" label="Prêmios e reconhecimentos">
+                <textarea
+                  id="p-awards"
+                  className="input min-h-[80px]"
+                  value={form.awards}
+                  onChange={(e) => atualizar('awards', e.target.value)}
+                />
+              </Campo>
             </>
           ) : (
             <>
@@ -407,6 +528,72 @@ export function Profile() {
                   onChange={(e) => atualizar('experience', e.target.value)}
                 />
               </Campo>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo id="p-deals" label="Investimentos por ano" hint="Quantos cheques você costuma assinar.">
+                  <input
+                    id="p-deals"
+                    type="number"
+                    min={0}
+                    className="input"
+                    value={form.dealsPerYear}
+                    onChange={(e) => atualizar('dealsPerYear', e.target.value)}
+                  />
+                </Campo>
+                <Campo id="p-horizon" label="Horizonte de investimento" hint="Ex.: 5 a 7 anos, longo prazo.">
+                  <input
+                    id="p-horizon"
+                    className="input"
+                    value={form.horizon}
+                    onChange={(e) => atualizar('horizon', e.target.value)}
+                  />
+                </Campo>
+              </div>
+
+              <Campo
+                id="p-valueadd"
+                label="Como você agrega valor"
+                hint="Rede, vendas, produto, governança, contratações."
+              >
+                <textarea
+                  id="p-valueadd"
+                  className="input min-h-[90px]"
+                  value={form.valueAdd}
+                  onChange={(e) => atualizar('valueAdd', e.target.value)}
+                />
+              </Campo>
+
+              <fieldset className="grid gap-3 sm:grid-cols-2">
+                <legend className="label">Forma de atuação</legend>
+                <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm dark:border-noite-700">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-laco-600 focus:ring-laco-500"
+                    checked={form.leadsRound}
+                    onChange={() => alternar('leadsRound')}
+                  />
+                  <span>
+                    <span className="block font-medium text-slate-800 dark:text-areia-100">Lidera rodadas</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      Costuma montar e liderar a rodada, não só participar.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm dark:border-noite-700">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-laco-600 focus:ring-laco-500"
+                    checked={form.boardSeat}
+                    onChange={() => alternar('boardSeat')}
+                  />
+                  <span>
+                    <span className="block font-medium text-slate-800 dark:text-areia-100">Assume conselho</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      Aceita cadeira no conselho ou atuação mais próxima.
+                    </span>
+                  </span>
+                </label>
+              </fieldset>
             </>
           )}
         </section>
@@ -440,6 +627,15 @@ export function Profile() {
                 placeholder="https://linkedin.com/in/..."
                 value={form.linkedin}
                 onChange={(e) => atualizar('linkedin', e.target.value)}
+              />
+            </Campo>
+            <Campo id="p-instagram" label="Instagram" hint="Perfil ou @ da marca.">
+              <input
+                id="p-instagram"
+                className="input"
+                placeholder="@suastartup"
+                value={form.instagram}
+                onChange={(e) => atualizar('instagram', e.target.value)}
               />
             </Campo>
           </div>

@@ -1,4 +1,4 @@
-import { MatchStatus, TicketStatus, UserRole } from '@prisma/client';
+import { MatchStatus, TicketStatus, UserRole, VerificationStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { HttpError } from '../utils/http-error';
 import { calculaSetor, normalizarTexto } from './matching.rules';
@@ -75,7 +75,7 @@ export async function getStartupInsights(startupId: string, viewer: Viewer) {
   const startup = await prisma.startupProfile.findUnique({
     where: { id: startupId },
     include: {
-      user: { select: { id: true, name: true, email: true, createdAt: true } },
+      user: { select: { id: true, name: true, email: true, createdAt: true, verifiedAt: true } },
       projects: { orderBy: { createdAt: 'asc' } },
     },
   });
@@ -215,7 +215,7 @@ export async function getInvestorInsights(investorId: string, viewer: Viewer) {
   const investor = await prisma.investorProfile.findUnique({
     where: { id: investorId },
     include: {
-      user: { select: { id: true, name: true, email: true, createdAt: true } },
+      user: { select: { id: true, name: true, email: true, createdAt: true, verifiedAt: true } },
     },
   });
 
@@ -275,6 +275,8 @@ export async function getAdminOverview() {
     recentUsers,
     ticketCounts,
     recentTickets,
+    verificationCounts,
+    verifiedProfiles,
   ] = await Promise.all([
     prisma.startupProfile.count(),
     prisma.user.groupBy({ by: ['role'], _count: { _all: true } }),
@@ -315,6 +317,8 @@ export async function getAdminOverview() {
         },
       },
     }),
+    prisma.profileVerification.groupBy({ by: ['status'], _count: { _all: true } }),
+    prisma.user.count({ where: { verifiedAt: { not: null } } }),
   ]);
 
   const porPapel = new Map(roles.map((item) => [item.role, item._count._all]));
@@ -368,5 +372,12 @@ export async function getAdminOverview() {
       ...ticket,
       naoLidas: ticket._count.messages,
     })),
+    verifications: {
+      pending: verificationCounts.find((item) => item.status === VerificationStatus.PENDENTE)?._count._all ?? 0,
+      approved: verificationCounts.find((item) => item.status === VerificationStatus.APROVADA)?._count._all ?? 0,
+      rejected: verificationCounts.find((item) => item.status === VerificationStatus.RECUSADA)?._count._all ?? 0,
+      verifiedProfiles,
+    },
   };
 }
+

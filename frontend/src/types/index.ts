@@ -14,6 +14,8 @@ export type ProjectStatus = 'PLANEJADO' | 'EM_ANDAMENTO' | 'CONCLUIDO';
 
 export type TrustStatus = 'NAO_AVALIADO' | 'CONFIAVEL' | 'SUSPEITO' | 'GOLPE';
 
+export type VerificationStatus = 'NAO_SOLICITADA' | 'PENDENTE' | 'APROVADA' | 'RECUSADA';
+
 export type TicketCategory = 'GOLPE' | 'PERFIL_FALSO' | 'ASSEDIO' | 'SPAM' | 'DADOS_INCORRETOS' | 'SUPORTE' | 'OUTRO';
 
 export type TicketStatus = 'ABERTO' | 'EM_ANALISE' | 'AGUARDANDO_USUARIO' | 'RESOLVIDO' | 'ARQUIVADO';
@@ -47,6 +49,7 @@ export interface MatchDetails {
   estagio: number;
   ticket: number;
   regiao: number;
+  verificacao: number;
 }
 
 export type CompatibilityStatus = 'ATENDE' | 'PARCIAL' | 'NAO_ATENDE';
@@ -95,6 +98,7 @@ export interface PublicUser {
   email?: string;
   role?: UserRole;
   createdAt?: string;
+  verifiedAt?: string | null;
 }
 
 export interface StartupProfile {
@@ -117,6 +121,16 @@ export interface StartupProfile {
   linkedin?: string | null;
   contactEmail?: string | null;
   phone?: string | null;
+  legalName?: string | null;
+  document?: string | null;
+  targetMarket?: string | null;
+  traction?: string | null;
+  roundTarget?: number | null;
+  useOfFunds?: string | null;
+  competitors?: string | null;
+  accelerators?: string | null;
+  awards?: string | null;
+  instagram?: string | null;
   hiddenAt?: string | null;
   projects?: Project[];
   user?: PublicUser;
@@ -142,6 +156,13 @@ export interface InvestorProfile {
   contactEmail?: string | null;
   phone?: string | null;
   experience?: string | null;
+  document?: string | null;
+  instagram?: string | null;
+  dealsPerYear?: number | null;
+  horizon?: string | null;
+  leadsRound?: boolean | null;
+  boardSeat?: boolean | null;
+  valueAdd?: string | null;
   hiddenAt?: string | null;
   user?: PublicUser;
 }
@@ -153,6 +174,7 @@ export interface User {
   role: UserRole;
   status?: UserStatus;
   trustStatus?: TrustStatus;
+  verifiedAt?: string | null;
   createdAt?: string;
   lastLoginAt?: string;
   startupProfile?: StartupProfile | null;
@@ -333,6 +355,101 @@ export interface AdminOverview {
     targetUser?: { name: string } | null;
     naoLidas?: number;
   }[];
+  verifications: {
+    pending: number;
+    approved: number;
+    rejected: number;
+    verifiedProfiles: number;
+  };
+}
+
+export interface ProfileVerification {
+  id: string;
+  status: Exclude<VerificationStatus, 'NAO_SOLICITADA'>;
+  legalName?: string | null;
+  document?: string | null;
+  website?: string | null;
+  linkedin?: string | null;
+  pitchUrl?: string | null;
+  evidence: string;
+  extraLinks?: string | null;
+  submittedAt: string;
+  reviewedAt?: string | null;
+  reviewedById?: string | null;
+  reviewNote?: string | null;
+}
+
+export interface MyVerification {
+  verificado: boolean;
+  verificadoEm?: string | null;
+  status: VerificationStatus;
+  podeSolicitar: boolean;
+  solicitacao: ProfileVerification | null;
+}
+
+export interface VerificationRequestInput {
+  legalName?: string;
+  document?: string;
+  website?: string;
+  linkedin?: string;
+  pitchUrl?: string;
+  evidence: string;
+  extraLinks?: string;
+}
+
+export interface AdminVerificationUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  trustStatus: TrustStatus;
+  verificado: boolean;
+  criadoEm: string;
+  startup?: Pick<
+    StartupProfile,
+    | 'id'
+    | 'companyName'
+    | 'sector'
+    | 'stage'
+    | 'city'
+    | 'state'
+    | 'website'
+    | 'linkedin'
+    | 'pitchUrl'
+    | 'description'
+    | 'hiddenAt'
+  > | null;
+  investidor?: Pick<
+    InvestorProfile,
+    | 'id'
+    | 'companyName'
+    | 'sectorInterest'
+    | 'stageInterest'
+    | 'ticketMin'
+    | 'ticketMax'
+    | 'city'
+    | 'state'
+    | 'website'
+    | 'linkedin'
+    | 'portfolioUrl'
+    | 'bio'
+    | 'hiddenAt'
+  > | null;
+}
+
+export interface AdminVerification extends ProfileVerification {
+  usuario: AdminVerificationUser;
+  revisadoPor?: { id: string; name: string } | null;
+}
+
+export interface AdminVerificationsPage extends Paginated {
+  contadores: {
+    pendentes: number;
+    aprovadas: number;
+    recusadas: number;
+  };
+  pedidos: AdminVerification[];
 }
 
 export interface TicketUser extends PublicUser {
@@ -464,6 +581,7 @@ export interface AdminUser {
   moderationReason?: string | null;
   deletedAt?: string | null;
   createdAt: string;
+  verifiedAt?: string | null;
   startupProfile?: AdminUserProfile | null;
   investorProfile?: AdminUserProfile | null;
 }
