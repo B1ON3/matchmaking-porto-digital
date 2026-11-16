@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert } from './Alert';
 import { Avatar } from './Avatar';
-import { Drawer } from './Drawer';
+import { Modal } from './Modal';
 import { ProgressRing } from './ProgressRing';
 import { Skeleton } from './Skeleton';
 import { matchService } from '../services';
@@ -157,7 +157,7 @@ export function CompatibilityDrawer({ open, matchId, onClose, onOpenBriefing }: 
   }, [open, matchId, tentativa]);
 
   return (
-    <Drawer open={open} onClose={onClose} title="Mapa de compatibilidade" size="xl">
+    <Modal open={open} onClose={onClose} title="Mapa de compatibilidade" size="xl">
       {carregando ? (
         <div className="space-y-4" aria-busy="true" aria-live="polite">
           <Skeleton className="h-28 w-full" />
@@ -287,6 +287,6 @@ export function CompatibilityDrawer({ open, matchId, onClose, onOpenBriefing }: 
           </section>
         </div>
       )}
-    </Drawer>
+    </Modal>
   );
 }

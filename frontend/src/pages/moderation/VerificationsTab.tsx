@@ -356,20 +356,27 @@ export function VerificationsTab() {
         <>
           <ul className="space-y-3">
             {pedidos.map((pedido) => (
-              <li key={pedido.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 font-semibold text-slate-900 dark:text-areia-100">
-                    {pedido.usuario.name}
-                    <span className={`badge ${CLASSE_PEDIDO[pedido.status]}`}>{ROTULO_PEDIDO[pedido.status]}</span>
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {pedido.usuario.email} · {ROTULO_PAPEL[pedido.usuario.role]} · enviado em{' '}
-                    {dataHora(pedido.submittedAt)}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{pedido.evidence}</p>
-                </div>
-                <button type="button" className="btn-secondary shrink-0" onClick={() => abrir(pedido)}>
-                  {pedido.status === 'PENDENTE' ? 'Analisar' : 'Ver detalhes'}
+              <li key={pedido.id}>
+                <button
+                  type="button"
+                  className="card flex w-full flex-col gap-3 text-left transition hover:border-laco-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-laco-400 dark:hover:border-laco-700 sm:flex-row sm:items-center sm:justify-between"
+                  aria-label={`${pedido.status === 'PENDENTE' ? 'Analisar' : 'Ver detalhes'} o pedido de ${pedido.usuario.name}`}
+                  onClick={() => abrir(pedido)}
+                >
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 font-semibold text-slate-900 dark:text-areia-100">
+                      {pedido.usuario.name}
+                      <span className={`badge ${CLASSE_PEDIDO[pedido.status]}`}>{ROTULO_PEDIDO[pedido.status]}</span>
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {pedido.usuario.email} · {ROTULO_PAPEL[pedido.usuario.role]} · enviado em{' '}
+                      {dataHora(pedido.submittedAt)}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{pedido.evidence}</p>
+                  </div>
+                  <span className="btn-secondary shrink-0">
+                    {pedido.status === 'PENDENTE' ? 'Analisar' : 'Ver detalhes'}
+                  </span>
                 </button>
               </li>
             ))}

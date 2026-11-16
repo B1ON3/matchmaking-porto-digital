@@ -406,7 +406,19 @@ export function AdminTickets() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-noite-700">
                 {dados.chamados.map((chamado) => (
-                  <tr key={chamado.id} className="align-top">
+                  <tr
+                    key={chamado.id}
+                    className="cursor-pointer align-top transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none dark:hover:bg-noite-800/60 dark:focus-visible:bg-noite-800/60"
+                    tabIndex={0}
+                    aria-label={`Abrir chamado ${chamado.protocol}: ${chamado.subject}`}
+                    onClick={() => void abrirChamado(chamado.id)}
+                    onKeyDown={(evento) => {
+                      if (evento.key === 'Enter' || evento.key === ' ') {
+                        evento.preventDefault();
+                        void abrirChamado(chamado.id);
+                      }
+                    }}
+                  >
                     <td className="px-4 py-3">
                       <p className="font-mono text-[11px] font-semibold text-slate-500">{chamado.protocol}</p>
                       <p className="mt-1 max-w-[18rem] truncate font-medium text-slate-900 dark:text-areia-100">
@@ -451,13 +463,7 @@ export function AdminTickets() {
                       {dataHora(chamado.updatedAt)}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        className="text-xs font-semibold text-laco-700 hover:underline dark:text-laco-300"
-                        onClick={() => void abrirChamado(chamado.id)}
-                      >
-                        Analisar
-                      </button>
+                      <span className="text-xs font-semibold text-laco-700 dark:text-laco-300">Analisar →</span>
                     </td>
                   </tr>
                 ))}

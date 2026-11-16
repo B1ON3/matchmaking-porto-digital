@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Alert } from '../../components/Alert';
 import { EmptyState } from '../../components/EmptyState';
 import { SectionHeader } from '../../components/SectionHeader';
@@ -33,6 +33,8 @@ interface TabelaDePessoasProps {
 }
 
 function TabelaDePessoas({ usuarios, usuarioAtualId }: TabelaDePessoasProps) {
+  const navegar = useNavigate();
+
   return (
     <div className="card overflow-x-auto p-0">
       <table className="w-full text-left text-sm">
@@ -53,7 +55,25 @@ function TabelaDePessoas({ usuarios, usuarioAtualId }: TabelaDePessoasProps) {
             const ehVoce = usuario.id === usuarioAtualId;
 
             return (
-              <tr key={usuario.id}>
+              <tr
+                key={usuario.id}
+                className="cursor-pointer transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none dark:hover:bg-noite-800/60 dark:focus-visible:bg-noite-800/60"
+                tabIndex={0}
+                aria-label={`Ver chamados de ${usuario.name}`}
+                onClick={(evento) => {
+                  if ((evento.target as HTMLElement).closest('a, button')) {
+                    return;
+                  }
+
+                  navegar('/chamados');
+                }}
+                onKeyDown={(evento) => {
+                  if (evento.key === 'Enter' || evento.key === ' ') {
+                    evento.preventDefault();
+                    navegar('/chamados');
+                  }
+                }}
+              >
                 <td className="px-4 py-3">
                   <p className="font-medium text-slate-900 dark:text-areia-100">
                     {usuario.name}
