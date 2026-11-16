@@ -176,8 +176,17 @@ export const messageService = {
     return data;
   },
 
-  async remove(id: string) {
-    await api.delete(`/v1/messages/${id}`);
+  async edit(id: string, content: string) {
+    const { data } = await api.patch<Message>(`/v1/messages/${id}`, { content });
+    return data;
+  },
+
+  // escopo "todos" apaga para os dois; "mim" esconde so para quem pediu
+  async remove(id: string, escopo: 'todos' | 'mim' = 'todos') {
+    const { data } = await api.delete<{ id: string; escopo: 'todos' | 'mim' }>(`/v1/messages/${id}`, {
+      params: { escopo },
+    });
+    return data;
   },
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAgenda } from '../context/AgendaContext';
@@ -36,6 +36,15 @@ export function Messages() {
   const fimConversa = useRef<HTMLDivElement>(null);
   const deveRolar = useRef(true);
 
+  const atualizarConversas = useCallback(async () => {
+    const lista = await messageService.conversas();
+
+    setConversas(lista);
+    setSelecionadaId((atual) =>
+      atual && lista.some((item) => item.usuario.id === atual) ? atual : (lista[0]?.usuario.id ?? null),
+    );
+  }, []);
+
   useEffect(() => {
     let ativo = true;
 
@@ -43,16 +52,7 @@ export function Messages() {
       setCarregando(true);
 
       try {
-        const lista = await messageService.conversas();
-
-        if (!ativo) {
-          return;
-        }
-
-        setConversas(lista);
-        setSelecionadaId((atual) =>
-          atual && lista.some((item) => item.usuario.id === atual) ? atual : (lista[0]?.usuario.id ?? null),
-        );
+        await atualizarConversas();
       } catch (e) {
         if (ativo) {
           setErro(extractErrorMessage(e));
@@ -69,7 +69,7 @@ export function Messages() {
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [atualizarConversas]);
 
   useEffect(() => {
     if (!selecionadaId) {
@@ -201,6 +201,35 @@ export function Messages() {
     }
   }
 
+  async function handleEditar(id: string, content: string) {
+    setErro('');
+
+    try {
+      const atualizada = await messageService.edit(id, content);
+      setMensagens((atual) => atual.map((item) => (item.id === id ? atualizada : item)));
+      setConversas((atual) =>
+        atual.map((item) => (item.ultimaMensagem.id === id ? { ...item, ultimaMensagem: atualizada } : item)),
+      );
+    } catch (e) {
+      setErro(extractErrorMessage(e));
+      throw e;
+    }
+  }
+
+  async function handleApagar(id: string, escopo: 'todos' | 'mim') {
+    setErro('');
+
+    try {
+      await messageService.remove(id, escopo);
+      setMensagens((atual) => atual.filter((item) => item.id !== id));
+      // a previa e a ordem da lista dependem da ultima mensagem: recarrega
+      await atualizarConversas();
+    } catch (e) {
+      setErro(extractErrorMessage(e));
+      throw e;
+    }
+  }
+
   if (carregando) {
     return <Spinner texto="Carregando suas conversas..." />;
   }
@@ -259,6 +288,8 @@ export function Messages() {
                   carregandoAntigas={carregandoAntigas}
                   fimRef={fimConversa}
                   onCarregarAntigas={() => void carregarAntigas()}
+                  onEditar={handleEditar}
+                  onApagar={handleApagar}
                 />
 
                 {podeEnviar ? (

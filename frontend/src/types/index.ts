@@ -201,6 +201,7 @@ export interface Message {
   recipientId: string;
   readAt?: string | null;
   createdAt: string;
+  editedAt?: string | null;
   sender: { id: string; name: string; email: string };
   recipient: { id: string; name: string; email: string };
 }

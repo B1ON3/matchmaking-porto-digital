@@ -58,6 +58,17 @@ export async function createMessage(data: Prisma.MessageUncheckedCreateInput) {
   });
 }
 
+// mensagem apagada "so pra mim" nao deve voltar para quem apagou, mas continua
+// visivel para o outro participante da conversa
+function visivelPara(userId: string): Prisma.MessageWhereInput {
+  return {
+    NOT: [
+      { senderId: userId, deletedForSender: true },
+      { recipientId: userId, deletedForRecipient: true },
+    ],
+  };
+}
+
 export async function findPage(input: { userId: string; conversaCom?: string; before?: Date; limit: number }) {
   const { userId, conversaCom, before, limit } = input;
 
@@ -72,6 +83,7 @@ export async function findPage(input: { userId: string; conversaCom?: string; be
           }
         : { OR: [{ senderId: userId }, { recipientId: userId }] }),
       ...(before ? { createdAt: { lt: before } } : {}),
+      ...visivelPara(userId),
     },
     include: messageInclude,
     orderBy: { createdAt: 'desc' },
@@ -81,7 +93,7 @@ export async function findPage(input: { userId: string; conversaCom?: string; be
 
 export async function findRecentMessages(userId: string, take: number) {
   return prisma.message.findMany({
-    where: { OR: [{ senderId: userId }, { recipientId: userId }] },
+    where: { OR: [{ senderId: userId }, { recipientId: userId }], ...visivelPara(userId) },
     include: messageInclude,
     orderBy: { createdAt: 'desc' },
     take,
@@ -90,7 +102,7 @@ export async function findRecentMessages(userId: string, take: number) {
 
 export async function countUnread(recipientId: string) {
   return prisma.message.count({
-    where: { recipientId, readAt: null },
+    where: { recipientId, readAt: null, deletedForRecipient: false },
   });
 }
 
@@ -105,6 +117,28 @@ export async function findMessageSender(id: string) {
   return prisma.message.findUnique({
     where: { id },
     select: { senderId: true },
+  });
+}
+
+export async function findMessageParticipants(id: string) {
+  return prisma.message.findUnique({
+    where: { id },
+    select: { id: true, senderId: true, recipientId: true },
+  });
+}
+
+export async function updateMessageContent(id: string, content: string, editedAt: Date) {
+  return prisma.message.update({
+    where: { id },
+    data: { content, editedAt },
+    include: messageInclude,
+  });
+}
+
+export async function hideMessageFor(id: string, lado: 'REMETENTE' | 'DESTINATARIO') {
+  await prisma.message.update({
+    where: { id },
+    data: lado === 'REMETENTE' ? { deletedForSender: true } : { deletedForRecipient: true },
   });
 }
 

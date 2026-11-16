@@ -5,13 +5,22 @@ import {
   deleteMessage,
   findMatchBetweenUsers,
   findMatchesForUser,
-  findMessageSender,
+  findMessageParticipants,
   findPage,
   findRecentMessages,
   findUser,
+  hideMessageFor,
   markConversationRead,
+  updateMessageContent,
 } from '../repositories/message.repository';
-import { decryptText, encryptText, EncryptionError, getEncryptionKid, isEncrypted, statusDoKeyring } from './encryption.service';
+import {
+  decryptText,
+  encryptText,
+  EncryptionError,
+  getEncryptionKid,
+  isEncrypted,
+  statusDoKeyring,
+} from './encryption.service';
 import { HttpError } from '../utils/http-error';
 
 // mensagens cifradas com um kid que saiu do keyring nao podem mais ser lidas.
@@ -180,16 +189,64 @@ export async function marcarConversaComoLida(usuarioId: string, outroUsuarioId: 
   return { updated: resultado.count };
 }
 
-export async function removerMensagem(id: string, usuarioId: string): Promise<void> {
-  const mensagem = await findMessageSender(id);
+export type EscopoExclusao = 'todos' | 'mim';
+export type LadoDaMensagem = 'REMETENTE' | 'DESTINATARIO';
+
+// quem participa da conversa pode esconder a mensagem "so pra mim";
+// editar ou apagar "pra todos" e exclusivo de quem enviou.
+export function ladoDoUsuario(mensagem: { senderId: string; recipientId: string }, usuarioId: string): LadoDaMensagem {
+  if (mensagem.senderId === usuarioId) {
+    return 'REMETENTE';
+  }
+
+  if (mensagem.recipientId === usuarioId) {
+    return 'DESTINATARIO';
+  }
+
+  throw HttpError.forbidden('voce nao participa dessa conversa');
+}
+
+export async function editarMensagem(id: string, usuarioId: string, content: string): Promise<MessageRecord> {
+  const mensagem = await findMessageParticipants(id);
 
   if (!mensagem) {
     throw HttpError.notFound('mensagem nao encontrada');
   }
 
-  if (mensagem.senderId !== usuarioId) {
-    throw HttpError.forbidden('voce so pode apagar mensagens que enviou');
+  if (ladoDoUsuario(mensagem, usuarioId) !== 'REMETENTE') {
+    throw HttpError.forbidden('voce so pode editar mensagens que enviou');
   }
 
-  await deleteMessage(id);
+  const atualizada = await updateMessageContent(id, encryptText(content), new Date());
+
+  return decifrarMensagem(atualizada);
+}
+
+export async function removerMensagem(
+  id: string,
+  usuarioId: string,
+  escopo: EscopoExclusao,
+): Promise<{ id: string; escopo: EscopoExclusao }> {
+  const mensagem = await findMessageParticipants(id);
+
+  if (!mensagem) {
+    throw HttpError.notFound('mensagem nao encontrada');
+  }
+
+  const lado = ladoDoUsuario(mensagem, usuarioId);
+
+  if (escopo === 'todos') {
+    if (lado !== 'REMETENTE') {
+      throw HttpError.forbidden('so quem enviou pode apagar a mensagem para todos');
+    }
+
+    await deleteMessage(id);
+
+    return { id, escopo };
+  }
+
+  // "so pra mim": marca o lado de quem pediu e mantem a mensagem para o outro
+  await hideMessageFor(id, lado);
+
+  return { id, escopo };
 }

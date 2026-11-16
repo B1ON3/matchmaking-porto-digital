@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
   contarNaoLidas,
+  editarMensagem,
   enviarMensagem,
   listarConversas,
   listarMensagens,
@@ -14,10 +15,19 @@ const createSchema = z.object({
   content: z.string().trim().min(1, 'a mensagem nao pode estar vazia').max(2000),
 });
 
+const editSchema = z.object({
+  content: z.string().trim().min(1, 'a mensagem nao pode estar vazia').max(2000),
+});
+
 const listSchema = z.object({
   conversaCom: z.string().uuid().optional(),
   before: z.coerce.date().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(30),
+});
+
+// "todos" apaga para os dois lados; "mim" esconde so para quem pediu
+const deleteQuerySchema = z.object({
+  escopo: z.enum(['todos', 'mim']).default('todos'),
 });
 
 const userParamsSchema = z.object({ userId: z.string().uuid() });
@@ -55,10 +65,18 @@ export async function markRead(req: Request, res: Response) {
   res.json(await marcarConversaComoLida(req.user!.id, userId));
 }
 
-// DELETE /api/messages/:id  (quem enviou pode apagar)
+// PATCH /api/messages/:id  (so o remetente edita; devolve editedAt)
+export async function edit(req: Request, res: Response) {
+  const { id } = idParamsSchema.parse(req.params);
+  const { content } = editSchema.parse(req.body);
+
+  res.json(await editarMensagem(id, req.user!.id, content));
+}
+
+// DELETE /api/messages/:id?escopo=todos|mim
 export async function remove(req: Request, res: Response) {
   const { id } = idParamsSchema.parse(req.params);
-  await removerMensagem(id, req.user!.id);
+  const { escopo } = deleteQuerySchema.parse(req.query);
 
-  res.status(204).send();
+  res.json(await removerMensagem(id, req.user!.id, escopo));
 }

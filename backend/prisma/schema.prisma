@@ -201,6 +201,11 @@ model Message {
   recipientId String
   readAt      DateTime?
   createdAt   DateTime  @default(now())
+  editedAt    DateTime?
+  // exclusao "so pra mim": cada lado tem a propria marca, sem apagar a mensagem
+  // do outro participante. "apagar pra todos" remove a linha de verdade.
+  deletedForSender    Boolean @default(false)
+  deletedForRecipient Boolean @default(false)
   recipient   User      @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
   sender      User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 

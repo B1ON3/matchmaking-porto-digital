@@ -140,7 +140,9 @@ Base: `http://localhost:5000/api` — versionada em `/v1`.
 | `GET`    | `/v1/messages/nao-lidas`               | Conta mensagens não lidas                                    | sim             |
 | `POST`   | `/v1/messages/conversas/:userId/read`  | Marca a conversa como lida                                   | sim             |
 | `POST`   | `/v1/messages`                         | Envia mensagem para uma conexão válida                       | sim             |
-| `DELETE` | `/v1/messages/:id`                     | Remove mensagem enviada                                      | sim             |
+| `PATCH`  | `/v1/messages/:id`                     | Edita o texto (só o remetente; grava `editedAt`)             | sim             |
+| `DELETE` | `/v1/messages/:id?escopo=todos`        | Apaga a mensagem para os dois lados (só o remetente)         | sim             |
+| `DELETE` | `/v1/messages/:id?escopo=mim`          | Esconde a mensagem só para quem pediu                        | sim             |
 | `GET`    | `/v1/appointments`                     | Lista agendamentos                                           | sim             |
 | `GET`    | `/v1/appointments/conflicts`           | Verifica conflito de horário                                 | sim             |
 | `POST`   | `/v1/appointments`                     | Cria agendamento com duração de 30 ou 60 min                 | sim             |
