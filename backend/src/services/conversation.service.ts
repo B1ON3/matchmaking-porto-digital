@@ -11,8 +11,23 @@ import {
   findUser,
   markConversationRead,
 } from '../repositories/message.repository';
-import { decryptText, encryptText } from './encryption.service';
+import { decryptText, encryptText, EncryptionError, getEncryptionKid, isEncrypted, statusDoKeyring } from './encryption.service';
 import { HttpError } from '../utils/http-error';
+
+// mensagens cifradas com um kid que saiu do keyring nao podem mais ser lidas.
+// mostrar um aviso no lugar do texto evita que uma unica mensagem antiga
+// derrube a lista inteira de conversas com 503.
+export const CONTEUDO_INDISPONIVEL = '[mensagem indisponivel: cifrada com uma chave que nao esta mais configurada]';
+
+const kidsSemChave = new Set<string>();
+
+let keyringDisponivel: boolean | undefined;
+
+// o keyring e lido uma vez por processo; na Vercel isso vale por instancia
+function temKeyring(): boolean {
+  keyringDisponivel ??= statusDoKeyring().configurada;
+  return keyringDisponivel;
+}
 
 export interface ConversationMatch {
   id: string;
@@ -44,7 +59,31 @@ export function validarMatchParaMensagem(match: { status: string } | null): void
 }
 
 function decifrarMensagem(mensagem: MessageRecord): MessageRecord {
-  return { ...mensagem, content: decryptText(mensagem.content) };
+  // texto legado em claro nao precisa de keyring pra ser lido
+  if (!isEncrypted(mensagem.content)) {
+    return mensagem;
+  }
+
+  try {
+    return { ...mensagem, content: decryptText(mensagem.content) };
+  } catch (erro) {
+    // keyring ausente/invalido continua sendo erro de configuracao (503):
+    // o /health ja expoe o que falta, nao escondemos isso atras de um aviso
+    if (!(erro instanceof EncryptionError) || !temKeyring()) {
+      throw erro;
+    }
+
+    const kid = getEncryptionKid(mensagem.content) ?? 'desconhecido';
+
+    if (!kidsSemChave.has(kid)) {
+      kidsSemChave.add(kid);
+      console.warn(`[mensagens] conteudo cifrado com o kid "${kid}", que nao esta no keyring atual`, {
+        mensagemId: mensagem.id,
+      });
+    }
+
+    return { ...mensagem, content: CONTEUDO_INDISPONIVEL };
+  }
 }
 
 export async function enviarMensagem(
