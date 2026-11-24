@@ -1,0 +1,255 @@
+{
+  "versao": "av2-2026-11-24",
+  "modelo": "KMeans + árvore substituta",
+  "k": 6,
+  "fidelidade": 0.95,
+  "features": [
+    "setor_tecnologia",
+    "setor_financeiro",
+    "setor_saude",
+    "setor_educacao",
+    "setor_agro",
+    "setor_criativa",
+    "setor_outros",
+    "n_setores",
+    "estagio_inicial",
+    "estagio_seed",
+    "estagio_expansao",
+    "n_estagios"
+  ],
+  "aliases": {
+    "tech": "tecnologia",
+    "ti": "tecnologia",
+    "software": "tecnologia",
+    "saas": "tecnologia",
+    "saas startup": "tecnologia",
+    "tecnologia da informacao": "tecnologia",
+    "fintech": "fintech",
+    "financeiro": "fintech",
+    "financas": "fintech",
+    "servicos financeiros": "fintech",
+    "saude": "saude",
+    "health": "saude",
+    "healthtech": "saude",
+    "educacao": "educacao",
+    "edtech": "educacao",
+    "education": "educacao",
+    "agro": "agro",
+    "agtech": "agro",
+    "agronegocio": "agro",
+    "economia criativa": "economia criativa",
+    "criativa": "economia criativa",
+    "creative": "economia criativa",
+    "games": "economia criativa",
+    "design": "economia criativa",
+    "logistica": "logistica",
+    "logtech": "logistica",
+    "mobilidade": "logistica",
+    "varejo": "varejo",
+    "retail": "varejo",
+    "e-commerce": "varejo",
+    "ecommerce": "varejo",
+    "comercio": "varejo",
+    "energia": "energia",
+    "cleantech": "energia",
+    "energia renovavel": "energia",
+    "sustentabilidade": "energia",
+    "industria": "industria",
+    "indtech": "industria",
+    "manufatura": "industria",
+    "pre seed": "pre-seed",
+    "semente": "pre-seed",
+    "ideia": "ideacao",
+    "serie a": "serie a",
+    "series a": "serie a",
+    "serie b": "serie b",
+    "series b": "serie b",
+    "marketplace b2b": "marketplace",
+    "plataforma": "marketplace",
+    "assinatura": "saas",
+    "saas recorrente": "saas",
+    "govtech": "governo",
+    "setor publico": "governo"
+  },
+  "setores_principais": ["tecnologia", "fintech", "saude", "educacao", "agro", "economia criativa"],
+  "arvore": {
+    "feature": "setor_financeiro",
+    "limite": 0.5,
+    "esquerda": {
+      "feature": "setor_agro",
+      "limite": 0.5,
+      "esquerda": {
+        "feature": "setor_criativa",
+        "limite": 0.5,
+        "esquerda": {
+          "feature": "setor_tecnologia",
+          "limite": 0.5,
+          "esquerda": {
+            "feature": "setor_educacao",
+            "limite": 0.5,
+            "esquerda": {
+              "classe": 0
+            },
+            "direita": {
+              "classe": 4
+            }
+          },
+          "direita": {
+            "feature": "setor_educacao",
+            "limite": 0.5,
+            "esquerda": {
+              "classe": 2
+            },
+            "direita": {
+              "feature": "setor_outros",
+              "limite": 0.5,
+              "esquerda": {
+                "classe": 4
+              },
+              "direita": {
+                "classe": 2
+              }
+            }
+          }
+        },
+        "direita": {
+          "feature": "setor_tecnologia",
+          "limite": 0.5,
+          "esquerda": {
+            "feature": "setor_educacao",
+            "limite": 0.5,
+            "esquerda": {
+              "classe": 1
+            },
+            "direita": {
+              "classe": 4
+            }
+          },
+          "direita": {
+            "feature": "estagio_expansao",
+            "limite": 0.5,
+            "esquerda": {
+              "classe": 1
+            },
+            "direita": {
+              "classe": 2
+            }
+          }
+        }
+      },
+      "direita": {
+        "feature": "setor_educacao",
+        "limite": 0.5,
+        "esquerda": {
+          "feature": "setor_tecnologia",
+          "limite": 0.5,
+          "esquerda": {
+            "classe": 5
+          },
+          "direita": {
+            "feature": "setor_outros",
+            "limite": 0.5,
+            "esquerda": {
+              "classe": 5
+            },
+            "direita": {
+              "classe": 2
+            }
+          }
+        },
+        "direita": {
+          "feature": "estagio_inicial",
+          "limite": 0.5,
+          "esquerda": {
+            "classe": 5
+          },
+          "direita": {
+            "classe": 4
+          }
+        }
+      }
+    },
+    "direita": {
+      "feature": "setor_agro",
+      "limite": 0.5,
+      "esquerda": {
+        "feature": "setor_educacao",
+        "limite": 0.5,
+        "esquerda": {
+          "feature": "n_setores",
+          "limite": 2.5,
+          "esquerda": {
+            "classe": 3
+          },
+          "direita": {
+            "feature": "n_estagios",
+            "limite": 1.5,
+            "esquerda": {
+              "feature": "setor_tecnologia",
+              "limite": 0.5,
+              "esquerda": {
+                "classe": 3
+              },
+              "direita": {
+                "classe": 2
+              }
+            },
+            "direita": {
+              "classe": 3
+            }
+          }
+        },
+        "direita": {
+          "classe": 4
+        }
+      },
+      "direita": {
+        "classe": 5
+      }
+    }
+  },
+  "segmentos": [
+    {
+      "id": 0,
+      "nome": "energia · serie b (cluster 0)",
+      "setores": ["energia", "saude", "varejo"],
+      "estagios": ["serie b", "seed"],
+      "descricao": "Perfil energia · serie b (cluster 0): 122 investidores. ticket mediano de R$ 192.500"
+    },
+    {
+      "id": 1,
+      "nome": "economia criativa · pre-seed (cluster 1)",
+      "setores": ["economia criativa", "energia", "saude"],
+      "estagios": ["pre-seed", "serie a"],
+      "descricao": "Perfil economia criativa · pre-seed (cluster 1): 55 investidores. ticket mediano de R$ 146.000"
+    },
+    {
+      "id": 2,
+      "nome": "tecnologia · serie a (cluster 2)",
+      "setores": ["tecnologia", "varejo", "industria"],
+      "estagios": ["serie a", "pre-seed"],
+      "descricao": "Perfil tecnologia · serie a (cluster 2): 53 investidores. ticket mediano de R$ 159.000"
+    },
+    {
+      "id": 3,
+      "nome": "fintech · serie a (cluster 3)",
+      "setores": ["fintech", "tecnologia", "varejo"],
+      "estagios": ["serie a", "seed"],
+      "descricao": "Perfil fintech · serie a (cluster 3): 63 investidores. ticket mediano de R$ 807.502"
+    },
+    {
+      "id": 4,
+      "nome": "educacao · pre-seed (cluster 4)",
+      "setores": ["educacao", "saude", "energia"],
+      "estagios": ["pre-seed", "seed"],
+      "descricao": "Perfil educacao · pre-seed (cluster 4): 53 investidores. ticket mediano de R$ 190.000"
+    },
+    {
+      "id": 5,
+      "nome": "agro · serie b (cluster 5)",
+      "setores": ["agro", "economia criativa", "saude"],
+      "estagios": ["serie b", "seed"],
+      "descricao": "Perfil agro · serie b (cluster 5): 54 investidores. ticket mediano de R$ 1.194.005"
+    }
+  ]
+}

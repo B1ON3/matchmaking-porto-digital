@@ -1,0 +1,7 @@
+﻿cluster,nome,n_investidores,setores_top,estagios_top,ticket_medio
+0,energia · serie b (cluster 0),122,"energia, saude, varejo","serie b, seed",192500.0
+1,economia criativa · pre-seed (cluster 1),55,"economia criativa, energia, saude","pre-seed, serie a",146000.0
+2,tecnologia · serie a (cluster 2),53,"tecnologia, varejo, industria","serie a, pre-seed",159000.0
+3,fintech · serie a (cluster 3),63,"fintech, tecnologia, varejo","serie a, seed",807502.01
+4,educacao · pre-seed (cluster 4),53,"educacao, saude, energia","pre-seed, seed",190000.0
+5,agro · serie b (cluster 5),54,"agro, economia criativa, saude","serie b, seed",1194005.48

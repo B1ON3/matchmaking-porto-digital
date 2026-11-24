@@ -31,6 +31,11 @@ postgres-data/
 coverage/
 .nyc_output/
 
+# Python / bytecode da AV2
+__pycache__/
+*.pyc
+.pytest_cache/
+
 # Editores
 .vscode/*
 !.vscode/extensions.json

@@ -27,6 +27,9 @@ export default [
       'backend/prisma/migrations/**',
       '.opencode/**',
       'frontend/public/**',
+      // dependências da AV2 e entregas da AV1 não são código TypeScript do produto
+      '.venv-ia/**',
+      'entrega-ia/av1/**',
     ],
   },
   ...compat.config(eslintrc),

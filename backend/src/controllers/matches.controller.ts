@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../config/prisma';
 import { obterCompatibilidade } from '../services/compatibility.service';
 import { gerarMatchesDaStartup } from '../services/matching.service';
+import { reordenarMatches } from '../services/segmentos-match.service';
 import { HttpError } from '../utils/http-error';
 
 const querySchema = z.object({
@@ -22,7 +23,7 @@ export async function list(req: Request, res: Response) {
   if (role === UserRole.STARTUP) {
     const perfil = await prisma.startupProfile.findUnique({
       where: { userId },
-      select: { id: true },
+      select: { id: true, sector: true },
     });
 
     if (!perfil) {
@@ -32,7 +33,7 @@ export async function list(req: Request, res: Response) {
     // recalcula pra garantir que o score reflects mudancas no perfil
     await gerarMatchesDaStartup(perfil.id);
 
-    const matches = await prisma.match.findMany({
+    const encontrados = await prisma.match.findMany({
       where: { startupId: perfil.id, score: { gte: minimo } },
       include: {
         investor: {
@@ -40,9 +41,21 @@ export async function list(req: Request, res: Response) {
         },
       },
       orderBy: { score: 'desc' },
-      skip: (pagina - 1) * porPagina,
-      take: porPagina,
     });
+
+    // a paginacao vem depois do desempate da IA (AV2), senao a ordem do banco
+    // (apenas score) descarta o criterio do segmento em scores iguais.
+    const matches = reordenarMatches(encontrados, (match) => ({
+      investidor: {
+        sectorInterest: match.investor.sectorInterest,
+        stageInterest: match.investor.stageInterest,
+        ticketMin: match.investor.ticketMin,
+        ticketMax: match.investor.ticketMax,
+        state: match.investor.state,
+      },
+      setorStartup: perfil.sector,
+      chaveDesempate: match.investorId,
+    })).slice((pagina - 1) * porPagina, pagina * porPagina);
 
     const total = await prisma.match.count({
       where: { startupId: perfil.id, score: { gte: minimo } },
@@ -54,14 +67,21 @@ export async function list(req: Request, res: Response) {
   if (role === UserRole.INVESTOR || role === UserRole.MENTOR) {
     const perfil = await prisma.investorProfile.findUnique({
       where: { userId },
-      select: { id: true },
+      select: {
+        id: true,
+        sectorInterest: true,
+        stageInterest: true,
+        ticketMin: true,
+        ticketMax: true,
+        state: true,
+      },
     });
 
     if (!perfil) {
       throw HttpError.notFound('perfil de investidor nao encontrado pra esse usuario');
     }
 
-    const matches = await prisma.match.findMany({
+    const encontrados = await prisma.match.findMany({
       where: { investorId: perfil.id, score: { gte: minimo } },
       include: {
         startup: {
@@ -69,9 +89,22 @@ export async function list(req: Request, res: Response) {
         },
       },
       orderBy: { score: 'desc' },
-      skip: (pagina - 1) * porPagina,
-      take: porPagina,
     });
+
+    // o mesmo criterio da AV2 vale para o investidor: em scores iguais, a
+    // startup do setor mais proximo do segmento dele vem primeiro.
+    const investidor = {
+      sectorInterest: perfil.sectorInterest,
+      stageInterest: perfil.stageInterest,
+      ticketMin: perfil.ticketMin,
+      ticketMax: perfil.ticketMax,
+      state: perfil.state,
+    };
+    const matches = reordenarMatches(encontrados, (match) => ({
+      investidor,
+      setorStartup: match.startup.sector,
+      chaveDesempate: match.id,
+    })).slice((pagina - 1) * porPagina, pagina * porPagina);
 
     const total = await prisma.match.count({
       where: { investorId: perfil.id, score: { gte: minimo } },

@@ -2,6 +2,8 @@ import type { InvestorProfile, Match, StartupProfile } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import type { MatchDetails } from './matching.rules';
 import { calculaScore as calculaScorePuro } from './matching.rules';
+import type { ContextoSegmento } from './segmentos-match.service';
+import { reordenarMatches } from './segmentos-match.service';
 
 export interface MatchResult {
   score: number;
@@ -67,16 +69,37 @@ export async function gerarMatchesDaStartup(startupId: string): Promise<Match[]>
   const porInvestidor = new Map(existentes.map((match) => [match.investorId, match]));
   const startupVerificada = Boolean(startup.user.verifiedAt);
 
-  const resultados = investors
-    .map((investor) => ({
-      investor,
-      resultado: calculaScore(startup, investor, {
-        startup: startupVerificada,
-        investidor: Boolean(investor.user.verifiedAt),
-      }),
-    }))
-    .filter(({ resultado }) => resultado.score > 0)
-    .sort((a, b) => b.resultado.score - a.resultado.score);
+  // IA da AV2: o segmento do investidor desempata scores iguais. Isso não
+  // altera calculaScore, reason, details nem os scores gravados no banco.
+  const emContexto = (investor: InvestorProfile): ContextoSegmento => ({
+    investidor: {
+      sectorInterest: investor.sectorInterest,
+      stageInterest: investor.stageInterest,
+      ticketMin: investor.ticketMin,
+      ticketMax: investor.ticketMax,
+      state: investor.state,
+    },
+    setorStartup: startup.sector,
+    chaveDesempate: investor.id,
+  });
+  const contextoPadrao: ContextoSegmento = {
+    investidor: { sectorInterest: '', stageInterest: '', ticketMin: 0, ticketMax: 0, state: '' },
+    setorStartup: startup.sector,
+  };
+
+  const resultados = reordenarMatches(
+    investors
+      .map((investor) => ({
+        investor,
+        resultado: calculaScore(startup, investor, {
+          startup: startupVerificada,
+          investidor: Boolean(investor.user.verifiedAt),
+        }),
+      }))
+      .filter(({ resultado }) => resultado.score > 0)
+      .map(({ investor, resultado }) => ({ investor, resultado, score: resultado.score })),
+    ({ investor }) => emContexto(investor),
+  );
 
   const criar = resultados.filter(({ investor }) => !porInvestidor.has(investor.id));
   const atualizar = resultados.filter(({ investor, resultado }) => {
@@ -127,8 +150,15 @@ export async function gerarMatchesDaStartup(startupId: string): Promise<Match[]>
     return [];
   }
 
-  return prisma.match.findMany({
+  const encontrados = await prisma.match.findMany({
     where: { startupId, investorId: { in: resultados.map(({ investor }) => investor.id) } },
     orderBy: { score: 'desc' },
   });
+
+  // o banco só ordena por score, então reaplicamos o desempate na resposta
+  const contextos = new Map(resultados.map(({ investor }) => [investor.id, emContexto(investor)]));
+  return reordenarMatches(
+    encontrados,
+    (match) => contextos.get(match.investorId) ?? { ...contextoPadrao, chaveDesempate: match.investorId },
+  );
 }

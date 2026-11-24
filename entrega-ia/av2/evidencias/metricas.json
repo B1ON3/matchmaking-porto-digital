@@ -1,0 +1,178 @@
+{
+  "fonte": {
+    "startups": "entrega-ia/av1/dados/original/startups_original.csv",
+    "investidores": "entrega-ia/av1/dados/original/investidores_original.csv",
+    "motivo": "preparada: esquema incompatível startups sem capital_procurado, estagio, setor, uf; investidores sem estagios_interesse, setores_interesse, ticket_maximo, ticket_minimo, uf"
+  },
+  "seed": 20261006,
+  "registros": 400,
+  "features": [
+    "setor_tecnologia",
+    "setor_financeiro",
+    "setor_saude",
+    "setor_educacao",
+    "setor_agro",
+    "setor_criativa",
+    "setor_outros",
+    "n_setores",
+    "estagio_inicial",
+    "estagio_seed",
+    "estagio_expansao",
+    "n_estagios",
+    "ticket_medio_log",
+    "ticket_amplitude",
+    "perfil_risco",
+    "experiencia_anos",
+    "investimentos_realizados",
+    "uf_pe",
+    "regiao_nordeste",
+    "modelo_b2b"
+  ],
+  "features_clusterizacao": [
+    "setor_tecnologia",
+    "setor_financeiro",
+    "setor_saude",
+    "setor_educacao",
+    "setor_agro",
+    "setor_criativa",
+    "setor_outros",
+    "n_setores",
+    "estagio_inicial",
+    "estagio_seed",
+    "estagio_expansao",
+    "n_estagios"
+  ],
+  "features_descartadas": [
+    "ticket_medio_log",
+    "ticket_amplitude",
+    "perfil_risco",
+    "experiencia_anos",
+    "investimentos_realizados",
+    "uf_pe",
+    "regiao_nordeste",
+    "modelo_b2b"
+  ],
+  "comparacao_features": {
+    "todas_as_features": 0.08847116680472097,
+    "perfil_de_interesses": 0.15848417394599182
+  },
+  "k": 6,
+  "avaliacao_k": [
+    {
+      "k": 2.0,
+      "silhueta": 0.11834693724095778,
+      "calinski": 47.18810271416009,
+      "davies": 2.6949344060813036
+    },
+    {
+      "k": 3.0,
+      "silhueta": 0.13280210777231846,
+      "calinski": 45.1986222262204,
+      "davies": 2.4183805668001894
+    },
+    {
+      "k": 4.0,
+      "silhueta": 0.17298671099783575,
+      "calinski": 45.294984401870835,
+      "davies": 2.0871598360170798
+    },
+    {
+      "k": 5.0,
+      "silhueta": 0.15848417394599182,
+      "calinski": 44.676830389889766,
+      "davies": 2.1165731994865356
+    },
+    {
+      "k": 6.0,
+      "silhueta": 0.18041878370082182,
+      "calinski": 46.48907240519444,
+      "davies": 1.7716077369977075
+    },
+    {
+      "k": 7.0,
+      "silhueta": 0.17288658350036723,
+      "calinski": 45.162713799776135,
+      "davies": 1.6278245658051802
+    },
+    {
+      "k": 8.0,
+      "silhueta": 0.14354946927465295,
+      "calinski": 43.091705649844535,
+      "davies": 1.5410293412359146
+    }
+  ],
+  "estabilidade": {
+    "ari_medio": 0.5921858018649985,
+    "ari_min": 0.3848592422656072,
+    "ari_max": 0.6729225749924407,
+    "amostras": 5.0
+  },
+  "comparacao_algoritmos": [
+    {
+      "algoritmo": "KMeans",
+      "silhueta": 0.18041878370082182,
+      "calinski": 46.48907240519444,
+      "davies": 1.7716077369977075
+    },
+    {
+      "algoritmo": "Agglomerative(ward)",
+      "silhueta": 0.1627649740834392,
+      "calinski": 41.915759522780874,
+      "davies": 1.8781585411048656
+    }
+  ],
+  "silhueta_final": 0.18041878370082182,
+  "clusters": [
+    {
+      "cluster": 0,
+      "nome": "energia · serie b (cluster 0)",
+      "n_investidores": 122,
+      "setores_top": "energia, saude, varejo",
+      "estagios_top": "serie b, seed",
+      "ticket_medio": 192500.0
+    },
+    {
+      "cluster": 1,
+      "nome": "economia criativa · pre-seed (cluster 1)",
+      "n_investidores": 55,
+      "setores_top": "economia criativa, energia, saude",
+      "estagios_top": "pre-seed, serie a",
+      "ticket_medio": 146000.0
+    },
+    {
+      "cluster": 2,
+      "nome": "tecnologia · serie a (cluster 2)",
+      "n_investidores": 53,
+      "setores_top": "tecnologia, varejo, industria",
+      "estagios_top": "serie a, pre-seed",
+      "ticket_medio": 159000.0
+    },
+    {
+      "cluster": 3,
+      "nome": "fintech · serie a (cluster 3)",
+      "n_investidores": 63,
+      "setores_top": "fintech, tecnologia, varejo",
+      "estagios_top": "serie a, seed",
+      "ticket_medio": 807502.01
+    },
+    {
+      "cluster": 4,
+      "nome": "educacao · pre-seed (cluster 4)",
+      "n_investidores": 53,
+      "setores_top": "educacao, saude, energia",
+      "estagios_top": "pre-seed, seed",
+      "ticket_medio": 190000.0
+    },
+    {
+      "cluster": 5,
+      "nome": "agro · serie b (cluster 5)",
+      "n_investidores": 54,
+      "setores_top": "agro, economia criativa, saude",
+      "estagios_top": "serie b, seed",
+      "ticket_medio": 1194005.48
+    }
+  ],
+  "fidelidade_arvore": 0.95,
+  "fidelidade_metodo": "estimativa em split estratificado 75/25; árvore exportada usa 100% dos rótulos",
+  "integracao": "backend/src/content/segmentos-matchmaking.json"
+}

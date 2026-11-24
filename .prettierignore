@@ -6,3 +6,7 @@ package-lock.json
 backend/prisma/migrations
 frontend/public
 .opencode
+.venv-ia
+.pytest_cache
+entrega-ia/av2/apresentacao/*.html
+entrega-ia/av1
